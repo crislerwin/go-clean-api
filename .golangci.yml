@@ -1,0 +1,78 @@
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+    - third_party
+    - build
+  skip-files:
+    - ".*_gen.go"
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - revive
+    - gosimple
+    - ineffassign
+    - errcheck
+    - unused
+    - structcheck
+    - deadcode
+    - typecheck
+    - gofmt
+    - goimports
+  disable:
+    - maligned
+
+linters-settings:
+  gofmt:
+    simplify: true
+
+  goimports:
+    # Set a local prefix for your project if you use a module path; adjust as needed.
+    # local-prefixes: github.com/your-org/your-repo
+
+  errcheck:
+    # Do not force-check some common function names that are safe to ignore.
+    exclude:
+      - Close
+      - Write
+      - Fprintf
+    check-type-assertions: false
+
+  revive:
+    ignore-generated-header: true
+    severity: error
+    rules:
+      # default revive rulesets are used; you can add specific rules here if desired
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  # Global text-level excludes (regex). Tune these to silence known false-positives.
+  exclude:
+    - "error return value not checked.*(Close|Write|Fprintf)"
+    - "should have comment or be unexported"
+    - "cannot find package"
+  # Path and linter specific exclusions
+  exclude-rules:
+    - path: "_test\\.go"
+      linters:
+        - revive
+    - path: "vendor/.*"
+      linters:
+        - "*"
+    - linters:
+        - errcheck
+      text: "Close"
+
+preset: recommended
+
+# Optional: you can enable caching for faster runs in CI
+cache:
+  enabled: true
+  # directory: .cache/golangci-lint
+
+# End of configuration
