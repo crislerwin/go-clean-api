@@ -1,0 +1,109 @@
+# Pre-commit configuration for the go-clean-api project.
+#
+# This configuration:
+# - Runs basic repository hygiene hooks (trailing whitespace, EOF fixer, YAML checks)
+# - Formats Go files with `gofmt` and `goimports`
+# - Runs `go vet` and (optionally) `golangci-lint` if installed
+# - Exposes a few local hooks that call Makefile targets (see suggested Makefile snippets below)
+#
+# Notes:
+# - Hooks that invoke system commands use `language: system`, so they require the corresponding
+#   tools to be installed on the developer machine (go, goimports, golangci-lint, make, etc.).
+# - You should add the Makefile targets shown at the bottom of this file to the project's Makefile
+#   so the local `make` hooks work consistently across contributors.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: master
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # Local hooks: use system tools already available on developer machines.
+  - repo: local
+    hooks:
+      - id: go-gofmt
+        name: gofmt (format Go files)
+        entry: gofmt -s -w .
+        language: system
+        description: |
+          Run `gofmt -s -w .` to format Go files in-place before committing.
+        files: \.go$
+        pass_filenames: false
+        stages: [commit]
+
+      - id: go-goimports
+        name: goimports (organize imports)
+        entry: goimports -w .
+        language: system
+        description: |
+          Run `goimports -w .` to fix and organize imports. Requires goimports to be installed.
+        files: \.go$
+        pass_filenames: false
+        stages: [commit]
+
+      - id: go-vet
+        name: go vet (static analysis)
+        entry: go vet ./...
+        language: system
+        description: Run `go vet` to catch suspicious constructs. Fails the commit if issues are found.
+        pass_filenames: false
+        stages: [commit]
+
+      - id: golangci-lint
+        name: golangci-lint (optional linter run)
+        entry: golangci-lint run --out-format=github-actions ./...
+        language: system
+        description: |
+          Run `golangci-lint run`. This hook is optional in the sense that the tool must be installed
+          locally (or available in CI). If not available locally, you can disable this hook or install
+          golangci-lint via Homebrew, apt, or their install script.
+        pass_filenames: false
+        stages: [commit, push]
+
+      - id: go-mod-tidy
+        name: go mod tidy (update go.mod / go.sum)
+        entry: go mod tidy
+        language: system
+        description: |
+          Runs `go mod tidy`. This hook is configured as `manual` by default so it does not run on every commit,
+          but teams can move it to commit stage if they prefer automatic tidying.
+        pass_filenames: false
+        stages: [manual]
+
+      - id: make-check
+        name: make check (project test + lint target)
+        entry: make check
+        language: system
+        description: |
+          Run `make check` (aggregated tests/lints). This is run on push to guard the remote branch.
+        pass_filenames: false
+        stages: [push]
+
+#
+# Suggested Makefile targets (add these to go-clean-api/Makefile)
+# -------------------------------------------------------------
+# The project Makefile should expose targets to standardize developer actions.
+# Add something like the following to the top-level Makefile:
+#
+# pre-commit-install:
+# 	# Install pre-commit and the hooks for this repo
+# 	# Ensure pre-commit is installed in the environment, then:
+# 	pre-commit install -f --install-hooks
+#
+# pre-commit-run:
+# 	# Run all configured pre-commit hooks against all files (useful in CI)
+# 	pre-commit run --all-files
+#
+# check:
+# 	# Run the project's check suite (linters, vet, tests)
+# 	@golangci-lint run ./... || true
+# 	@go vet ./...
+# 	@go test ./...
+#
+# Notes on using the Makefile:
+# - `make pre-commit-install` should be run by contributors once after cloning to install git hooks.
+# - CI systems can call `make pre-commit-run` or `pre-commit run --all-files` to enforce checks.
+#
+# End of file
