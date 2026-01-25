@@ -1,24 +1,59 @@
 run:
     timeout: 5m
     tests: true
-    skip-dirs:
-        - mocks
-        - vendor
+    # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
+    go: "1.25"
+    issues:
+        exclude-dirs:
+            - mocks
+            - vendor
 
 linters:
     disable-all: true
     enable:
-        - gofmt # Formatação
-        - govet # Análise estática padrão
-        - gosec # Segurança
-        - gocyclo # Complexidade de código
-        - ineffassign # Atribuições ineficientes
-        - staticcheck # Verificações robustas de lógica
-        - godot # Verifica se comentários terminam com ponto (útil para documentação)
-        - errcheck # Verifica se erros retornados estão a ser tratados
+        - gofmt
+        - govet
+        - gosec
+        - gocyclo
+        - ineffassign
+        - staticcheck
+        - godot
+        - errcheck
+        - shadow
 
 linters-settings:
     gocyclo:
         min-complexity: 10
-    govet:
-        check-shadowing: true
+
+    gofmt:
+        simplify: true
+
+    errcheck:
+        # Do not force-check some common function names that are safe to ignore.
+        exclude:
+            - Close
+            - Write
+            - Fprintf
+        check-type-assertions: false
+
+issues:
+    exclude-use-default: false
+    max-issues-per-linter: 0
+    max-same-issues: 0
+    exclude:
+        - "error return value not checked.*(Close|Write|Fprintf)"
+    exclude-rules:
+        - path: "_test\\.go"
+          linters:
+              - revive
+        - path: "vendor/.*"
+          linters:
+              - "*"
+        - linters:
+              - errcheck
+          text: "Close"
+
+preset: recommended
+
+cache:
+    enabled: true
