@@ -11,7 +11,7 @@ GOFMT ?= gofmt
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down
+.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down coverage coverage-html
 
 help:
 	@echo "Makefile targets:"
@@ -21,6 +21,8 @@ help:
 	@echo "  vet                     Run go vet on $(APP_PATH)"
 	@echo "  lint                    Run golangci-lint using .golangci.yml"
 	@echo "  test                    Run go test on $(APP_PATH)"
+	@echo "  coverage                Run tests and show coverage"
+	@echo "  coverage-html           Run tests and show coverage report in browser"
 	@echo "  build                   Build the application to bin/server"
 	@echo "  run                     Run the application from bin/server/app"
 	@echo "  dev                     Run the application with air hot reloading"
@@ -71,6 +73,13 @@ lint:
 
 test:
 	$(GO) test -v $(APP_PATH)
+
+coverage:
+	$(GO) test -coverprofile=coverage.out $(APP_PATH)
+	$(GO) tool cover -func=coverage.out
+
+coverage-html: coverage
+	$(GO) tool cover -html=coverage.out
 
 check: lint vet test
 
