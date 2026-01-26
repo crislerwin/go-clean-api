@@ -6,6 +6,7 @@ import (
 
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/handler"
+	"github.com/crislerwin/go-clean-api/internal/infra/http/middleware"
 	"github.com/crislerwin/go-clean-api/internal/infra/repository"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,8 @@ func main() {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
+
+	api.Use(middleware.AuthMiddleware())
 	{
 		api.POST("/orders", orderHandler.CreateOrder)
 	}

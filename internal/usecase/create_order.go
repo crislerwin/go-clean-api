@@ -79,7 +79,7 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 		if err != nil {
 			return err
 		}
-		sold, err := uc.eventRepo.GetSoldTicketsCount(ctxTx, input.UserID)
+		sold, err := uc.eventRepo.GetSoldTicketsCount(ctxTx, input.EventID)
 
 		if err != nil {
 			return err

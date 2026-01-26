@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
+
+type createOrderRequest struct {
+	EventID  string `json:"event_id" binding:"required,uuid"`
+	Quantity int    `json:"quantity" binding:"required,min=1"`
+}
 
 type OrderHandler struct {
 	createOrderUseCase *usecase.CreateOrderUseCase
@@ -19,11 +25,24 @@ func NewOrderHandler(createOrderUseCase *usecase.CreateOrderUseCase) *OrderHandl
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	var input usecase.OrderInputDTO
+	var req createOrderRequest
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
 		return
+	}
+
+	userID, ok := auth.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	input := usecase.OrderInputDTO{
+		EventID:        req.EventID,
+		UserID:         userID,
+		Quantity:       req.Quantity,
+		PricePerTicket: 100.0,
 	}
 
 	output, err := h.createOrderUseCase.Execute(c.Request.Context(), input)
@@ -40,6 +59,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, output)
+	c.JSON(http.StatusCreated, output)
 
 }
