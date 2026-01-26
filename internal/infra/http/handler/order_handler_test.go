@@ -43,6 +43,11 @@ func (m *EventRepoMock) GetSoldTicketsCount(ctx context.Context, eventID string)
 	return args.Int(0), args.Error(1)
 }
 
+func (m *EventRepoMock) Create(ctx context.Context, event *entity.Event) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 type TxManagerMock struct {
 	mock.Mock
 }

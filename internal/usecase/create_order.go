@@ -2,17 +2,11 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 
 	"github.com/google/uuid"
-)
-
-var (
-	ErrEventNotFound = errors.New("event not found")
-	ErrEventSoldOut  = errors.New("event sold out")
 )
 
 type OrderInputDTO struct {
@@ -27,19 +21,6 @@ type OrderOutputDTO struct {
 	Status      string    `json:"status"`
 	TotalAmount float64   `json:"total_amount"`
 	CreatedAt   time.Time `json:"created_at"`
-}
-
-type TransactionManager interface {
-	Do(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
-type OrderRepository interface {
-	Save(ctx context.Context, order *entity.Order) error
-}
-
-type EventRepository interface {
-	GetTotalCapacity(ctx context.Context, eventID string) (int, error)
-	GetSoldTicketsCount(ctx context.Context, eventID string) (int, error)
 }
 
 type CreateOrderUseCase struct {

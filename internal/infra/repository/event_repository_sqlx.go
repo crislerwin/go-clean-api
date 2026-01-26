@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/jmoiron/sqlx"
 )
@@ -57,4 +58,17 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 	}
 
 	return count, nil
+}
+
+func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) error {
+	query := `
+	INSERT INTO events (id, name, location, organization, rating, date, capacity, price, image_url, partner_id)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
+
+	executor := database.GetExecutor(ctx, r.db)
+
+	_, err := sqlx.NamedExecContext(ctx, executor, query, event)
+
+	return err
 }
