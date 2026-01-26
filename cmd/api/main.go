@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/handler"
@@ -12,9 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib" // Standard library bindings for pgx
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		connStr = "postgres://ticket_user:ticket_pass@localhost:5432/ticket_db?sslmode=disable"
@@ -40,6 +46,13 @@ func main() {
 	eventHandler := handler.NewEventHandler(createEventUseCase)
 
 	r := gin.Default()
+
+	trustedProxies := os.Getenv("TRUSTED_PROXIES")
+	if trustedProxies != "" {
+		if err := r.SetTrustedProxies(strings.Split(trustedProxies, ",")); err != nil {
+			log.Printf("failed to set trusted proxies: %v", err)
+		}
+	}
 
 	api := r.Group("/api/v1")
 
