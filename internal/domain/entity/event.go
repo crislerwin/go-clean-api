@@ -22,11 +22,10 @@ type Event struct {
 	ImageURL     string
 	Capacity     int
 	Price        float64
-	PartnerID    int // Quem criou o evento (se for multi-tenant)
 }
 
 // Factory para garantir integridade
-func NewEvent(name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string, partnerID int) (*Event, error) {
+func NewEvent(name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string) (*Event, error) {
 	if name == "" || capacity <= 0 || price < 0 {
 		return nil, ErrInvalidEventData
 	}
@@ -45,6 +44,5 @@ func NewEvent(name, location, organization string, rating string, date time.Time
 		Capacity:     capacity,
 		Price:        price,
 		ImageURL:     imageURL,
-		PartnerID:    partnerID,
 	}, nil
 }
