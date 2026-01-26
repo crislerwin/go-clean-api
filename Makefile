@@ -1,6 +1,6 @@
 GO ?= go
 # Ajustado para refletir a estrutura do vídeo (pasta app)
-APP_PATH := ./app/...
+APP_PATH := ./...
 GOLANGCI_LINT ?= golangci-lint
 PRE_COMMIT ?= pre-commit
 GOIMPORTS ?= goimports
