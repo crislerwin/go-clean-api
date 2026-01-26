@@ -11,22 +11,14 @@ var (
 	ErrInvalidQuantity = errors.New("quantity must be greater than zero")
 )
 
-type Ticket struct {
-	ID      uuid.UUID `db:"id"`
-	EventID uuid.UUID `db:"event_id"`
-	OrderID uuid.UUID `db:"order_id"`
-	Price   float64   `db:"price"`
-	Status  string    `db:"status"`
-}
-
 type Order struct {
-	ID          uuid.UUID `db:"id"`
-	EventID     uuid.UUID `db:"event_id"`
-	UserID      uuid.UUID `db:"user_id"`
-	TotalAmount float64   `db:"total_amount"`
-	Status      string    `db:"status"`
-	Tickets     []Ticket  `db:"tickets"`
-	CreatedAt   time.Time `db:"created_at"`
+	ID          uuid.UUID
+	EventID     uuid.UUID
+	UserID      uuid.UUID
+	TotalAmount float64
+	Status      string
+	Tickets     []Ticket
+	CreatedAt   time.Time
 }
 
 func NewOrder(eventID, userID uuid.UUID, quantity int, pricePerTicket float64) (*Order, error) {
@@ -37,15 +29,10 @@ func NewOrder(eventID, userID uuid.UUID, quantity int, pricePerTicket float64) (
 	totalAmount := 0.0
 	tickets := make([]Ticket, quantity)
 	for i := range tickets {
-		tickets[i] = Ticket{
-			ID:      uuid.New(),
-			EventID: eventID,
-			OrderID: orderID,
-			Price:   pricePerTicket,
-			Status:  "VALID",
-		}
+		tickets[i] = *NewTicket(eventID, orderID, pricePerTicket)
 		totalAmount += pricePerTicket
 	}
+
 	return &Order{
 		ID:          orderID,
 		EventID:     eventID,
