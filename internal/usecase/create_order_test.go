@@ -103,6 +103,59 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 			},
 			expectedError: entity.ErrInvalidQuantity,
 		},
+		{
+			name: "GetSoldTicketsCount Error",
+			input: OrderInputDTO{
+				EventID:  eventID.String(),
+				UserID:   userID.String(),
+				Quantity: 1,
+			},
+			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
+				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+					ID:       eventID,
+					Capacity: 10,
+				}, nil)
+				eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID.String()).Return(0, errors.New("db error"))
+			},
+			expectedError: errors.New("db error"),
+		},
+		{
+			name: "Repository Save Error",
+			input: OrderInputDTO{
+				EventID:  eventID.String(),
+				UserID:   userID.String(),
+				Quantity: 1,
+			},
+			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
+				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+					ID:       eventID,
+					Capacity: 10,
+				}, nil)
+				eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID.String()).Return(0, nil)
+				orderRepo.On("Save", mock.Anything, mock.Anything).Return(errors.New("save error"))
+			},
+			expectedError: errors.New("save error"),
+		},
+		{
+			name: "Invalid Event ID Format",
+			input: OrderInputDTO{
+				EventID:  "invalid-uuid",
+				UserID:   userID.String(),
+				Quantity: 1,
+			},
+			setupMocks:    func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {},
+			expectedError: errors.New("invalid UUID length: 12"),
+		},
+		{
+			name: "Invalid User ID Format",
+			input: OrderInputDTO{
+				EventID:  eventID.String(),
+				UserID:   "invalid-uuid",
+				Quantity: 1,
+			},
+			setupMocks:    func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {},
+			expectedError: errors.New("invalid UUID length: 12"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -118,7 +171,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
+				assert.EqualError(t, err, tt.expectedError.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, output)
