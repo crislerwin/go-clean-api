@@ -4,42 +4,73 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewOrder(t *testing.T) {
-	t.Run("should create a new valid order", func(t *testing.T) {
-		eventID := uuid.New()
-		userID := uuid.New()
-		quantity := 2
-		pricePerTicket := 100.0
+	eventID := uuid.New()
+	userID := uuid.New()
 
-		order, err := NewOrder(eventID, userID, quantity, pricePerTicket)
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-		if order.TotalAmount != 200.00 {
-			t.Errorf("Expected total amount 200.0, got %v", order.TotalAmount)
-		}
-		if order.Status != "PENDING" {
-			t.Errorf("Expected status PENDING, got %s", order.Status)
-		}
-		if len(order.Tickets) != 2 {
+	tests := []struct {
+		name           string
+		eventID        uuid.UUID
+		userID         uuid.UUID
+		quantity       int
+		pricePerTicket float64
+		expectedErr    error
+		expectedTotal  float64
+		expectedCount  int
+	}{
+		{
+			name:           "should create a new valid order",
+			eventID:        eventID,
+			userID:         userID,
+			quantity:       2,
+			pricePerTicket: 100.0,
+			expectedErr:    nil,
+			expectedTotal:  200.0,
+			expectedCount:  2,
+		},
+		{
+			name:           "should throw error when quantity is zero",
+			eventID:        eventID,
+			userID:         userID,
+			quantity:       0,
+			pricePerTicket: 100.0,
+			expectedErr:    ErrInvalidQuantity,
+			expectedTotal:  0,
+			expectedCount:  0,
+		},
+		{
+			name:           "should throw error when quantity is negative",
+			eventID:        eventID,
+			userID:         userID,
+			quantity:       -1,
+			pricePerTicket: 100.0,
+			expectedErr:    ErrInvalidQuantity,
+			expectedTotal:  0,
+			expectedCount:  0,
+		},
+	}
 
-			t.Errorf("Expected 2 tickets, got %d", len(order.Tickets))
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			order, err := NewOrder(tt.eventID, tt.userID, tt.quantity, tt.pricePerTicket)
 
-	})
-
-	t.Run("should throw error when quantity is zero", func(t *testing.T) {
-		eventID := uuid.New()
-		userID := uuid.New()
-		quantity := 0
-		price := 10.0
-
-		_, err := NewOrder(eventID, userID, quantity, price)
-
-		if err == nil {
-			t.Error("Expected error for zero quantity, got nil")
-		}
-	})
+			if tt.expectedErr != nil {
+				assert.ErrorIs(t, err, tt.expectedErr)
+				assert.Nil(t, order)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, order)
+				assert.Equal(t, tt.expectedTotal, order.TotalAmount)
+				assert.Equal(t, "PENDING", order.Status)
+				assert.Equal(t, tt.expectedCount, len(order.Tickets))
+				assert.Equal(t, tt.eventID, order.EventID)
+				assert.Equal(t, tt.userID, order.UserID)
+				assert.NotEmpty(t, order.ID)
+				assert.NotEmpty(t, order.CreatedAt)
+			}
+		})
+	}
 }
