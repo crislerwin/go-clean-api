@@ -25,6 +25,11 @@ func (m *UserRepoMock) Save(ctx context.Context, user *entity.User) error {
 	return args.Error(0)
 }
 
+func (m *UserRepoMock) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	args := m.Called(ctx, email)
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
 func TestUserHandler_CreateUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

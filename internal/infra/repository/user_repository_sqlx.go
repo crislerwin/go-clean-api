@@ -22,3 +22,12 @@ func (r *UserRepositorySQLx) Save(ctx context.Context, user *entity.User) error 
 	_, err := r.db.ExecContext(ctx, query, user.ID, user.Name, user.Email, user.Password)
 	return err
 }
+
+func (r *UserRepositorySQLx) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	query := `SELECT id, name, email, password FROM users WHERE email = $1`
+	var user entity.User
+	if err := r.db.GetContext(ctx, &user, query, email); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

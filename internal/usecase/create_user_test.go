@@ -19,6 +19,11 @@ func (m *ValidationMockUserRepository) Save(ctx context.Context, user *entity.Us
 	return args.Error(0)
 }
 
+func (m *ValidationMockUserRepository) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	args := m.Called(ctx, email)
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
 func TestCreateUserUseCase_Execute(t *testing.T) {
 	t.Run("should create a valid user", func(t *testing.T) {
 		repo := new(ValidationMockUserRepository)
