@@ -28,10 +28,10 @@ func (r *EventRepositorySQLx) GetTotalCapacity(ctx context.Context, eventID stri
 
 	var total int
 
-	er := sqlx.GetContext(ctx, executor, &total, query, eventID)
+	err := sqlx.GetContext(ctx, executor, &total, query, eventID)
 
-	if er != nil {
-		return 0, er
+	if err != nil {
+		return 0, err
 	}
 
 	return total, nil
@@ -50,10 +50,10 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 
 	var count int
 
-	er := sqlx.GetContext(ctx, executor, &count, query, eventID)
+	err := sqlx.GetContext(ctx, executor, &count, query, eventID)
 
-	if er != nil {
-		return 0, er
+	if err != nil {
+		return 0, err
 	}
 
 	return count, nil
