@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/crislerwin/go-clean-api/internal/usecase"
@@ -33,6 +33,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 	var req createEventRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Warn("Invalid request body", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
 		return
 	}
@@ -50,10 +51,11 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 
 	output, err := h.createEventUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
-		log.Println("Error creating event:", err)
+		slog.Error("Error creating event", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
+	slog.Info("Event created successfully", "event_id", output.ID, "event_name", output.Name)
 	c.JSON(http.StatusCreated, output)
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -17,8 +17,12 @@ import (
 )
 
 func main() {
+	// Setup structured logging
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		slog.Warn("No .env file found")
 	}
 
 	connStr := os.Getenv("DATABASE_URL")
@@ -29,7 +33,8 @@ func main() {
 	db, err := sqlx.Connect("pgx", connStr)
 
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	defer db.Close()
@@ -50,7 +55,7 @@ func main() {
 	trustedProxies := os.Getenv("TRUSTED_PROXIES")
 	if trustedProxies != "" {
 		if err := r.SetTrustedProxies(strings.Split(trustedProxies, ",")); err != nil {
-			log.Printf("failed to set trusted proxies: %v", err)
+			slog.Error("failed to set trusted proxies", "error", err)
 		}
 	}
 
@@ -62,9 +67,10 @@ func main() {
 		api.POST("/events", eventHandler.CreateEvent)
 	}
 
-	log.Println("Server started on :8080")
+	slog.Info("Server started on :8080")
 	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		slog.Error("failed to start server", "error", err)
+		os.Exit(1)
 	}
 
 }

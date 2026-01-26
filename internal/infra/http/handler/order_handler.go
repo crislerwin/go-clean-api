@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
@@ -28,6 +28,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var req createOrderRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Warn("Invalid order request body", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
 		return
 	}
@@ -52,12 +53,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		case usecase.ErrEventNotFound:
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		default:
-			fmt.Println("Error creating order:", err)
+			slog.Error("Error creating order", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
 		return
 	}
 
+	slog.Info("Order created successfully", "order_id", output.ID, "user_id", userID, "event_id", input.EventID)
 	c.JSON(http.StatusCreated, output)
 
 }
