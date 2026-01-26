@@ -48,6 +48,11 @@ func (m *EventRepoMock) Create(ctx context.Context, event *entity.Event) error {
 	return args.Error(0)
 }
 
+func (m *EventRepoMock) GetByID(ctx context.Context, eventID string) (*entity.Event, error) {
+	args := m.Called(ctx, eventID)
+	return args.Get(0).(*entity.Event), args.Error(1)
+}
+
 type TxManagerMock struct {
 	mock.Mock
 }
@@ -112,7 +117,14 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 
 	t.Run("🟢 Success: Should return 201 when authenticated and valid", func(t *testing.T) {
 		deps, r, _ := setup()
-		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(10, nil)
+		// Mock GetByID
+		mockEvent := &entity.Event{
+			ID:       uuid.MustParse(eventID),
+			Price:    100.0,
+			Capacity: 10,
+		}
+		deps.eventRepo.On("GetByID", mock.Anything, eventID).Return(mockEvent, nil)
+
 		deps.eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID).Return(0, nil)
 		deps.orderRepo.On("Save", mock.Anything, mock.AnythingOfType("*entity.Order")).Return(nil)
 
@@ -140,7 +152,13 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 
 	t.Run("🔴 Fail: Should return 409 when event is sold out", func(t *testing.T) {
 		deps, r, _ := setup()
-		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(10, nil)
+
+		mockEvent := &entity.Event{
+			ID:       uuid.MustParse(eventID),
+			Price:    100.0,
+			Capacity: 10,
+		}
+		deps.eventRepo.On("GetByID", mock.Anything, eventID).Return(mockEvent, nil)
 		deps.eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID).Return(10, nil)
 
 		payload := map[string]any{"event_id": eventID, "quantity": 1}
@@ -155,7 +173,7 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 
 	t.Run("🔴 Fail: Should return 404 when event not found", func(t *testing.T) {
 		deps, r, _ := setup()
-		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(0, usecase.ErrEventNotFound)
+		deps.eventRepo.On("GetByID", mock.Anything, eventID).Return((*entity.Event)(nil), usecase.ErrEventNotFound)
 
 		payload := map[string]any{"event_id": eventID, "quantity": 1}
 		jsonBody, _ := json.Marshal(payload)

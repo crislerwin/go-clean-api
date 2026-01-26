@@ -34,8 +34,10 @@ func main() {
 	orderRepo := repository.NewOrderRepositorySQLx(db)
 
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
+	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 
 	orderHandler := handler.NewOrderHandler(createOrderUseCase)
+	eventHandler := handler.NewEventHandler(createEventUseCase)
 
 	r := gin.Default()
 
@@ -44,6 +46,7 @@ func main() {
 	api.Use(middleware.AuthMiddleware())
 	{
 		api.POST("/orders", orderHandler.CreateOrder)
+		api.POST("/events", eventHandler.CreateEvent)
 	}
 
 	log.Println("Server started on :8080")

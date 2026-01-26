@@ -10,10 +10,9 @@ import (
 )
 
 type OrderInputDTO struct {
-	EventID        string  `json:"event_id"`
-	UserID         string  `json:"user_id"`
-	Quantity       int     `json:"quantity"`
-	PricePerTicket float64 `json:"price_per_ticket"`
+	EventID  string `json:"event_id"`
+	UserID   string `json:"user_id"`
+	Quantity int    `json:"quantity"`
 }
 
 type OrderOutputDTO struct {
@@ -50,22 +49,29 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 	if err != nil {
 		return nil, err
 	}
-	order, err := entity.NewOrder(eventID, userID, input.Quantity, input.PricePerTicket)
+
+	event, err := uc.eventRepo.GetByID(ctx, input.EventID)
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := entity.NewOrder(eventID, userID, input.Quantity, event.Price)
 	if err != nil {
 		return nil, err
 	}
 
 	err = uc.txManager.Do(ctx, func(ctxTx context.Context) error {
-		total, err := uc.eventRepo.GetTotalCapacity(ctx, input.EventID)
-		if err != nil {
-			return err
-		}
-		sold, err := uc.eventRepo.GetSoldTicketsCount(ctxTx, input.EventID)
+		// We already have the event matching the ID, and we can check capacity directly if we trust the fetched event.
+		// However, for consistency with current logic which might use checking capacity:
+		// But GetByID returns the event struct which has Capacity.
+		// Optimization: Use event.Capacity directly instead of calling GetTotalCapacity again.
 
+		sold, err := uc.eventRepo.GetSoldTicketsCount(ctxTx, input.EventID)
 		if err != nil {
 			return err
 		}
-		if (sold + input.Quantity) > total {
+
+		if (sold + input.Quantity) > event.Capacity {
 			return ErrEventSoldOut
 		}
 

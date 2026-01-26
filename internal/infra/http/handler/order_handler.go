@@ -39,10 +39,9 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	}
 
 	input := usecase.OrderInputDTO{
-		EventID:        req.EventID,
-		UserID:         userID,
-		Quantity:       req.Quantity,
-		PricePerTicket: 100.0,
+		EventID:  req.EventID,
+		UserID:   userID,
+		Quantity: req.Quantity,
 	}
 
 	output, err := h.createOrderUseCase.Execute(c.Request.Context(), input)
