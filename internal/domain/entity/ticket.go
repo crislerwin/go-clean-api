@@ -3,11 +3,11 @@ package entity
 import "github.com/google/uuid"
 
 type Ticket struct {
-	ID      uuid.UUID
-	EventID uuid.UUID
-	OrderID uuid.UUID
-	Price   float64
-	Status  string
+	ID      uuid.UUID `db:"id"`
+	EventID uuid.UUID `db:"event_id"`
+	OrderID uuid.UUID `db:"order_id"`
+	Price   float64   `db:"price"`
+	Status  string    `db:"status"`
 }
 
 func NewTicket(eventID, orderID uuid.UUID, price float64) *Ticket {

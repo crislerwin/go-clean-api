@@ -20,8 +20,8 @@ func NewOrderRepositorySQLx(db *sqlx.DB) *OrderRepositorySQLx {
 func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) error {
 	executor := database.GetExecutor(ctx, r.db)
 	orderQuery := `
-		INSERT INTO orders (id, event_id, user_id, total_amount, status, created_at)
-		VALUES (:id, :event_id, :user_id, :total_amount, :status, :created_at)
+		INSERT INTO orders (id, event_id, user_id, quantity, total_amount, status, created_at)
+		VALUES (:id, :event_id, :user_id, :quantity, :total_amount, :status, :created_at)
 		`
 	ticketQuery := `
 		INSERT INTO tickets (id, event_id, order_id, price, status)

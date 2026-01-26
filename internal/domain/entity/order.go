@@ -12,13 +12,14 @@ var (
 )
 
 type Order struct {
-	ID          uuid.UUID
-	EventID     uuid.UUID
-	UserID      uuid.UUID
-	TotalAmount float64
-	Status      string
-	Tickets     []Ticket
-	CreatedAt   time.Time
+	ID          uuid.UUID `db:"id"`
+	EventID     uuid.UUID `db:"event_id"`
+	UserID      uuid.UUID `db:"user_id"`
+	TotalAmount float64   `db:"total_amount"`
+	Quantity    int       `db:"quantity"`
+	Status      string    `db:"status"`
+	Tickets     []Ticket  `db:"-"` // One-to-many relationship, not a column
+	CreatedAt   time.Time `db:"created_at"`
 }
 
 func NewOrder(eventID, userID uuid.UUID, quantity int, pricePerTicket float64) (*Order, error) {
@@ -38,6 +39,7 @@ func NewOrder(eventID, userID uuid.UUID, quantity int, pricePerTicket float64) (
 		EventID:     eventID,
 		UserID:      userID,
 		TotalAmount: totalAmount,
+		Quantity:    quantity,
 		Status:      "PENDING",
 		Tickets:     tickets,
 		CreatedAt:   time.Now(),
