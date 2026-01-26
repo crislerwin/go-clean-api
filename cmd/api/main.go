@@ -41,14 +41,17 @@ func main() {
 
 	txManager := database.NewTransactionManager(db)
 	eventRepo := repository.NewEventRepositorySqlx(db)
+	userRepo := repository.NewUserRepositorySQLx(db)
 
 	orderRepo := repository.NewOrderRepositorySQLx(db)
 
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
+	createUserUseCase := usecase.NewCreateUserUseCase(userRepo)
 
 	orderHandler := handler.NewOrderHandler(createOrderUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase)
+	userHandler := handler.NewUserHandler(createUserUseCase)
 
 	r := gin.Default()
 
@@ -60,6 +63,9 @@ func main() {
 	}
 
 	api := r.Group("/api/v1")
+
+	// Public routes
+	api.POST("/users", userHandler.CreateUser)
 
 	api.Use(middleware.AuthMiddleware())
 	{
