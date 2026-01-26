@@ -48,10 +48,12 @@ func main() {
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 	createUserUseCase := usecase.NewCreateUserUseCase(userRepo)
+	loginUseCase := usecase.NewLoginUseCase(userRepo)
 
 	orderHandler := handler.NewOrderHandler(createOrderUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase)
 	userHandler := handler.NewUserHandler(createUserUseCase)
+	authHandler := handler.NewAuthHandler(loginUseCase)
 
 	r := gin.Default()
 
@@ -66,6 +68,7 @@ func main() {
 
 	// Public routes
 	api.POST("/users", userHandler.CreateUser)
+	api.POST("/login", authHandler.Login)
 
 	api.Use(middleware.AuthMiddleware())
 	{

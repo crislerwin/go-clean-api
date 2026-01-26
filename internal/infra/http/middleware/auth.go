@@ -1,14 +1,37 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+
+	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
 	"github.com/gin-gonic/gin"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Mock auth until we have a real auth system
-		const mockUserID = "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-		c.Set("userID", mockUserID)
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			c.Abort()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+			c.Abort()
+			return
+		}
+
+		claims, err := auth.ValidateToken(parts[1])
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", claims.UserID)
 		c.Next()
 	}
 }
