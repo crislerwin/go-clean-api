@@ -13,15 +13,15 @@ var (
 )
 
 type Event struct {
-	ID           uuid.UUID
-	Name         string
-	Location     string
-	Organization string
-	Rating       string // "Livre", "18+", etc
-	Date         time.Time
-	ImageURL     string
-	Capacity     int
-	Price        float64
+	ID           uuid.UUID `db:"id"`
+	Name         string    `db:"name"`
+	Location     string    `db:"location"`
+	Organization string    `db:"organization"`
+	Rating       string    `db:"rating"` // "Livre", "18+", etc
+	Date         time.Time `db:"date"`
+	ImageURL     string    `db:"image_url"`
+	Capacity     int       `db:"capacity"`
+	Price        float64   `db:"price"`
 }
 
 // Factory para garantir integridade

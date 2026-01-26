@@ -19,7 +19,7 @@ func NewEventRepositorySqlx(db *sqlx.DB) *EventRepositorySQLx {
 func (r *EventRepositorySQLx) GetTotalCapacity(ctx context.Context, eventID string) (int, error) {
 
 	query := `
-	SELECT total_capacity
+	SELECT capacity
 	FROM events
 	WHERE id = $1
 	FOR UPDATE
@@ -63,7 +63,7 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) error {
 	query := `
 	INSERT INTO events (id, name, location, organization, rating, date, capacity, price, image_url)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	VALUES (:id, :name, :location, :organization, :rating, :date, :capacity, :price, :image_url)
 	`
 
 	executor := database.GetExecutor(ctx, r.db)

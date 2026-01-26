@@ -6,8 +6,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Note que o host é 'db', o nome do serviço abaixo, não 'localhost'
-      - DATABASE_URL=postgres://ticket_user:ticket_pass@db:5432/ticket_db?sslmode=disable
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - db
     networks:
@@ -18,15 +17,13 @@ services:
     image: postgres:15-alpine
     container_name: go-clean-api-db
     environment:
-      POSTGRES_USER: ticket_user
-      POSTGRES_PASSWORD: ticket_pass
-      POSTGRES_DB: ticket_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432" # Exposto para você acessar via DBeaver/PgAdmin
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Script de init roda automaticamente na primeira vez
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - go-clean-api-network
 

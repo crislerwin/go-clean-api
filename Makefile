@@ -1,3 +1,6 @@
+include .env
+export $(shell sed 's/=.*//' .env)
+
 GO ?= go
 # Ajustado para refletir a estrutura do vídeo (pasta app)
 APP_PATH := ./...
@@ -8,7 +11,7 @@ GOFMT ?= gofmt
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev
+.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down
 
 help:
 	@echo "Makefile targets:"
@@ -21,6 +24,9 @@ help:
 	@echo "  build                   Build the application to bin/server"
 	@echo "  run                     Run the application from bin/server/app"
 	@echo "  dev                     Run the application with air hot reloading"
+	@echo "  migration-new           Create a new migration file"
+	@echo "  migration-up            Run migrations up"
+	@echo "  migration-down          Run migrations down"
 	@echo "  ci                      Full pipeline (tidy, fmt, lint, vet, test)"
 
 pre-commit-install:
@@ -39,6 +45,16 @@ run: build
 
 dev:
 	air -c .air.toml
+
+migration-new:
+	@read -p "Enter migration name: " name; \
+	goose -dir sql/migrations postgres "$(DATABASE_URL)" create $$name sql
+
+migration-up:
+	goose -dir sql/migrations postgres "$(DATABASE_URL)" up
+
+migration-down:
+	goose -dir sql/migrations postgres "$(DATABASE_URL)" down
 
 fmt:
 	$(GO) fmt $(APP_PATH)
