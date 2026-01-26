@@ -8,7 +8,7 @@ GOFMT ?= gofmt
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci
+.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev
 
 help:
 	@echo "Makefile targets:"
@@ -18,6 +18,9 @@ help:
 	@echo "  vet                     Run go vet on $(APP_PATH)"
 	@echo "  lint                    Run golangci-lint using .golangci.yml"
 	@echo "  test                    Run go test on $(APP_PATH)"
+	@echo "  build                   Build the application to bin/server"
+	@echo "  run                     Run the application from bin/server/app"
+	@echo "  dev                     Run the application with air hot reloading"
 	@echo "  ci                      Full pipeline (tidy, fmt, lint, vet, test)"
 
 pre-commit-install:
@@ -27,6 +30,15 @@ pre-commit-install:
 
 pre-commit-run:
 	$(PRE_COMMIT) run --all-files
+
+build:
+	$(GO) build -o bin/server/app cmd/api/main.go
+
+run: build
+	./bin/server/app
+
+dev:
+	air -c .air.toml
 
 fmt:
 	$(GO) fmt $(APP_PATH)
