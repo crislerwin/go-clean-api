@@ -5,6 +5,7 @@ import (
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
+	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -29,7 +30,7 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 
 	_, err := sqlx.NamedExecContext(ctx, executor, orderQuery, order)
 	if err != nil {
-		return err
+		return postgres.TranslateError(err)
 	}
 
 	for i := range order.Tickets {
