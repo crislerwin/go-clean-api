@@ -42,7 +42,7 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 	SELECT COUNT(*)
 	FROM tickets t
 	JOIN orders o ON t.order_id = o.id
-	WHERE event_id = $1
+	WHERE t.event_id = $1
 	AND o.status IN ('PAID', 'PENDING')
 	`
 
