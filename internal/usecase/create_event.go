@@ -22,7 +22,6 @@ type CreateEventInputDTO struct {
 	Capacity     int     `json:"capacity"`
 	Price        float64 `json:"price"`
 	ImageURL     string  `json:"image_url"`
-	PartnerID    int     `json:"partner_id"`
 }
 
 type CreateEventOutputDTO struct {
