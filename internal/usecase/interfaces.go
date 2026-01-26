@@ -20,3 +20,7 @@ type EventRepository interface {
 	Create(ctx context.Context, event *entity.Event) error
 	GetByID(ctx context.Context, eventID string) (*entity.Event, error)
 }
+
+type UserRepository interface {
+	Save(ctx context.Context, user *entity.User) error
+}
