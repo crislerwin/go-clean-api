@@ -53,77 +53,112 @@ func (m *TxManagerMock) Do(ctx context.Context, fn func(ctx context.Context) err
 
 func TestOrderHandler_CreateOrder(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-
 	eventID := uuid.New().String()
 
-	t.Run("🔴 Fail: Should return 401 when UserID is missing from contex", func(t *testing.T) {
+	type testDeps struct {
+		orderRepo *OrderRepoMock
+		eventRepo *EventRepoMock
+		txManager *TxManagerMock
+		handler   *OrderHandler
+	}
 
-		// Arrange
-
-		uc := usecase.NewCreateOrderUseCase(nil, nil, nil)
-		handler := NewOrderHandler(uc)
-
-		r := gin.New()
-		r.POST("/orders", handler.CreateOrder)
-		payload := map[string]any{
-			"event_id": eventID,
-			"quantity": 1,
-		}
-
-		jsonBody, _ := json.Marshal(payload)
-
-		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
-		w := httptest.NewRecorder()
-		// Act
-		r.ServeHTTP(w, req)
-		// Assert
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "user not authenticated")
-
-	})
-	t.Run("🟢 Success: Should return 201 when authenticated and valid", func(t *testing.T) {
-		// Arrange
+	setup := func() (*testDeps, *gin.Engine, string) {
 		orderRepo := &OrderRepoMock{}
 		eventRepo := &EventRepoMock{}
 		txManager := &TxManagerMock{}
 		userID := uuid.New().String()
-		// Configurando comportamento esperado dos mocks
-		// 1. Evento existe e tem capacidade
-		eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(10, nil)
-		eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID).Return(0, nil)
-		// 2. Order salva com sucesso
-		orderRepo.On("Save", mock.Anything, mock.AnythingOfType("*entity.Order")).Return(nil)
 
 		uc := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 		handler := NewOrderHandler(uc)
 
 		r := gin.New()
-
-		// TRUQUE DO TESTE: Middleware Fake Local
-		// Simulamos o Auth Middleware apenas para este teste
 		r.Use(func(c *gin.Context) {
-			c.Set("userID", userID)
+			if userID != "" {
+				c.Set("userID", userID)
+			}
 			c.Next()
 		})
-
 		r.POST("/orders", handler.CreateOrder)
 
-		payload := map[string]any{
-			"event_id": eventID,
-			"quantity": 2,
-		}
+		return &testDeps{
+			orderRepo: orderRepo,
+			eventRepo: eventRepo,
+			txManager: txManager,
+			handler:   handler,
+		}, r, userID
+	}
+
+	t.Run("🔴 Fail: Should return 401 when UserID is missing from context", func(t *testing.T) {
+		// Custom setup for unauthenticated case
+		uc := usecase.NewCreateOrderUseCase(nil, nil, nil)
+		handler := NewOrderHandler(uc)
+		r := gin.New()
+		r.POST("/orders", handler.CreateOrder) // No auth middleware
+
+		payload := map[string]any{"event_id": eventID, "quantity": 1}
 		jsonBody, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
 		w := httptest.NewRecorder()
 
-		// Act
 		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "user not authenticated")
+	})
 
-		// Assert
+	t.Run("🟢 Success: Should return 201 when authenticated and valid", func(t *testing.T) {
+		deps, r, _ := setup()
+		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(10, nil)
+		deps.eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID).Return(0, nil)
+		deps.orderRepo.On("Save", mock.Anything, mock.AnythingOfType("*entity.Order")).Return(nil)
+
+		payload := map[string]any{"event_id": eventID, "quantity": 2}
+		jsonBody, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusCreated, w.Code)
+		deps.orderRepo.AssertExpectations(t)
+	})
 
-		// Verifica se o UseCase recebeu o userID correto (que veio do contexto)
-		// Isso garante que a integração Handler -> Context -> UseCase funcionou
-		orderRepo.AssertExpectations(t)
+	t.Run("🔴 Fail: Should return 400 when body is invalid", func(t *testing.T) {
+		_, r, _ := setup()
+		payload := map[string]any{"event_id": eventID} // Missing quantity
+		jsonBody, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "invalid request body")
+	})
+
+	t.Run("🔴 Fail: Should return 409 when event is sold out", func(t *testing.T) {
+		deps, r, _ := setup()
+		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(10, nil)
+		deps.eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID).Return(10, nil)
+
+		payload := map[string]any{"event_id": eventID, "quantity": 1}
+		jsonBody, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusConflict, w.Code)
+		assert.Contains(t, w.Body.String(), "event sold out")
+	})
+
+	t.Run("🔴 Fail: Should return 404 when event not found", func(t *testing.T) {
+		deps, r, _ := setup()
+		deps.eventRepo.On("GetTotalCapacity", mock.Anything, eventID).Return(0, usecase.ErrEventNotFound)
+
+		payload := map[string]any{"event_id": eventID, "quantity": 1}
+		jsonBody, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/orders", bytes.NewBuffer(jsonBody))
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Contains(t, w.Body.String(), "event not found")
 	})
 }
