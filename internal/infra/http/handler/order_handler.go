@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createOrderRequest struct {
+type CreateOrderRequest struct {
 	EventID  string `json:"event_id" binding:"required,uuid"`
 	Quantity int    `json:"quantity" binding:"required,min=1"`
 }
@@ -24,8 +24,22 @@ func NewOrderHandler(createOrderUseCase *usecase.CreateOrderUseCase) *OrderHandl
 	}
 }
 
+// CreateOrder godoc
+// @Summary      Purchase tickets
+// @Description  Purchase tickets for an event
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        input body CreateOrderRequest true "Order Data"
+// @Success      201  {object}  usecase.OrderOutputDTO
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      409  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /orders [post]
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	var req createOrderRequest
+	var req CreateOrderRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Warn("Invalid order request body", "error", err)

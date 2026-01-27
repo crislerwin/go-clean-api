@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type signUpRequest struct {
+type SignUpRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
@@ -24,8 +24,19 @@ func NewUserHandler(signUpUseCase *usecase.SignUpUseCase) *UserHandler {
 	}
 }
 
+// SignUp godoc
+// @Summary      Register a new user
+// @Description  Register a new user with the default 'user' role
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input body SignUpRequest true "User Registration Credentials"
+// @Success      201  {object}  usecase.SignUpOutputDTO
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /signup [post]
 func (h *UserHandler) SignUp(c *gin.Context) {
-	var req signUpRequest
+	var req SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Warn("Invalid user request body", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
