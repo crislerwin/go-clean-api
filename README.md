@@ -1,4 +1,4 @@
-# Go Clean API
+# Ticketing System API
 
 A robust Ticketing System implementation showcasing **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Test-Driven Development (TDD)** in Go.
 
