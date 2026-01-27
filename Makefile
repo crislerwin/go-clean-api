@@ -8,6 +8,7 @@ GOLANGCI_LINT ?= golangci-lint
 PRE_COMMIT ?= pre-commit
 GOIMPORTS ?= goimports
 GOFMT ?= gofmt
+TEST_DATABASE_URL ?= postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable
 
 .DEFAULT_GOAL := help
 
@@ -67,7 +68,7 @@ migration-down:
 
 migration-test-up:
 	@echo "Running migrations on test database..."
-	@goose -dir sql/migrations postgres "postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable" up
+	@goose -dir sql/migrations postgres "$(TEST_DATABASE_URL)" up
 
 fmt:
 	$(GO) fmt $(APP_PATH)
@@ -87,7 +88,7 @@ test:
 
 test-e2e:
 	@echo "Running e2e tests with test database..."
-	TEST_DATABASE_URL="postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable" $(GO) test -v ./test/e2e/...
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" $(GO) test -v ./test/e2e/...
 
 test-all: test test-e2e
 
