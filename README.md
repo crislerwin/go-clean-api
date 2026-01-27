@@ -175,3 +175,14 @@ sequenceDiagram
 - `POST /api/v1/events`: Create a new event.
   - **Requires**: Role `admin`.
   - **Body**: `{"name": "...", "capacity": 100, "price": 50.0, ...}`
+
+## TODO
+
+- [ ] Add e2e tests
+- [ ] Add edit user endpoint
+- [ ] Add edit event endpoint
+- [ ] Add event description field
+- [ ] Add soft delete event endpoint
+- [ ] Add change order status webhook endpoint for payment gateway
+- [ ] Add event image upload endpoint // using cloud storage
+- [ ] Add event check-in endpoint // using ticket id
