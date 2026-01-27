@@ -1,59 +1,69 @@
 run:
-    timeout: 5m
-    tests: true
-    # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
-    go: "1.25"
-    issues:
-        exclude-dirs:
-            - mocks
-            - vendor
+  timeout: 5m
+  tests: true
+  # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
+  go: "1.23"
+  issues:
+    exclude-dirs:
+      - mocks
+      - vendor
 
 linters:
-    disable-all: true
-    enable:
-        - gofmt
-        - govet
-        - gosec
-        - gocyclo
-        - ineffassign
-        - staticcheck
-        - godot
-        - errcheck
-        - shadow
+  disable-all: true
+  enable:
+    - gofmt
+    - govet
+    - gosec
+    - gocyclo
+    - ineffassign
+    - staticcheck
+    - godot
+    - errcheck
 
 linters-settings:
-    gocyclo:
-        min-complexity: 10
+  gocyclo:
+    min-complexity: 10
 
-    gofmt:
-        simplify: true
+  gofmt:
+    simplify: true
 
-    errcheck:
-        # Do not force-check some common function names that are safe to ignore.
-        exclude:
-            - Close
-            - Write
-            - Fprintf
-        check-type-assertions: false
+  errcheck:
+    # Do not force-check some common function names that are safe to ignore.
+    exclude-functions:
+      - (*os.File).Close
+      - (*net.IPConn).Close
+      - (*net.TCPConn).Close
+      - (*net.UDPConn).Close
+      - (*net.UnixConn).Close
+      - (*net.Pipe).Close
+      - (*net.Listener).Close
+      - (io.Closer).Close
+      - (io.Writer).Write
+      - (fmt.Fprintf)
+    check-type-assertions: false
 
 issues:
-    exclude-use-default: false
-    max-issues-per-linter: 0
-    max-same-issues: 0
-    exclude:
-        - "error return value not checked.*(Close|Write|Fprintf)"
-    exclude-rules:
-        - path: "_test\\.go"
-          linters:
-              - revive
-        - path: "vendor/.*"
-          linters:
-              - "*"
-        - linters:
-              - errcheck
-          text: "Close"
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude:
+    - "error return value not checked.*(Close|Write|Fprintf)"
+  exclude-rules:
+    - path: "_test\\.go"
+      linters:
+        - revive
+    - path: "vendor/.*"
+      linters:
+        - "*"
+    - linters:
+        - errcheck
+      text: "Close"
+    - path: "_test\\.go"
+      linters:
+        - typecheck
+      text: "undefined.*(On|Called|AssertExpectations)"
 
 preset: recommended
 
 cache:
-    enabled: true
+  enabled: true

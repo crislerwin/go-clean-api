@@ -3,68 +3,68 @@
 # - Run formatting, vet and security checks locally on commit (fast & tolerant)
 # - Run golangci-lint in CI/on push only (heavier linting)
 repos:
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.3.0
-      hooks:
-          - id: trailing-whitespace
-            files: \.(go|yml|yaml)$
-          - id: end-of-file-fixer
-            files: \.(go|yml|yaml)$
-          - id: check-yaml
-            files: \.(yml|yaml)$
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+        files: \.(go|yml|yaml)$
+      - id: end-of-file-fixer
+        files: \.(go|yml|yaml)$
+      - id: check-yaml
+        files: \.(yml|yaml)$
 
-    - repo: local
-      hooks:
-          # Formatting: gofmt (in-place) — run on commit for entire repo, tolerant if tool missing
-          - id: go-fmt
-            name: gofmt (format Go files)
-            entry: bash -lc "if command -v gofmt >/dev/null 2>&1; then gofmt -s -w .; else echo 'gofmt not installed, skipping'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [commit]
+  - repo: local
+    hooks:
+      # Formatting: gofmt (in-place) — run on commit for entire repo, tolerant if tool missing
+      - id: go-fmt
+        name: gofmt (format Go files)
+        entry: bash -lc "if command -v gofmt >/dev/null 2>&1; then gofmt -s -w .; else echo 'gofmt not installed, skipping'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [commit]
 
-          # Organize imports: goimports (in-place) — run on commit for entire repo, tolerant if missing
-          - id: go-imports
-            name: goimports (organize imports)
-            entry: bash -lc "if command -v goimports >/dev/null 2>&1; then goimports -w .; else echo 'goimports not installed, skipping'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [commit]
+      # Organize imports: goimports (in-place) — run on commit for entire repo, tolerant if missing
+      - id: go-imports
+        name: goimports (organize imports)
+        entry: bash -lc "if command -v goimports >/dev/null 2>&1; then goimports -w .; else echo 'goimports not installed, skipping'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [commit]
 
-          # Static checks: go vet — run on commit for entire repo, tolerant if missing
-          - id: go-vet
-            name: go vet
-            entry: bash -lc "if command -v go >/dev/null 2>&1; then go vet ./... || (echo 'go vet failed' && exit 1); else echo 'go not installed, skipping go vet'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [commit]
+      # Static checks: go vet — run on commit for entire repo, tolerant if missing
+      - id: go-vet
+        name: go vet
+        entry: bash -lc "if command -v go >/dev/null 2>&1; then go vet ./... || (echo 'go vet failed' && exit 1); else echo 'go not installed, skipping go vet'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [commit]
 
-          # Security checks: gosec — run on commit for entire repo, tolerant if missing
-          - id: gosec
-            name: gosec (security checks)
-            entry: bash -lc "if command -v gosec >/dev/null 2>&1; then gosec ./... || (echo 'gosec failed' && exit 1); else echo 'gosec not installed, skipping'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [commit]
+      # Security checks: gosec — run on commit for entire repo, tolerant if missing
+      - id: gosec
+        name: gosec (security checks)
+        entry: bash -lc "if command -v gosec >/dev/null 2>&1; then gosec ./... || (echo 'gosec failed' && exit 1); else echo 'gosec not installed, skipping'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [commit]
 
-          # Optional: run go test on commit (tolerant if go is missing)
-          - id: go-test
-            name: go test (unit tests)
-            entry: bash -lc "if command -v go >/dev/null 2>&1; then go test ./... || (echo 'go test failed' && exit 1); else echo 'go not installed, skipping tests'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [commit]
+      # Optional: run go test on commit (tolerant if go is missing)
+      - id: go-test
+        name: go test (unit tests)
+        entry: bash -lc "if command -v go >/dev/null 2>&1; then go test ./... || (echo 'go test failed' && exit 1); else echo 'go not installed, skipping tests'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [commit, push]
 
-          # Heavy linting: golangci-lint — run on push only (CI-like), tolerant if missing
-          - id: golangci-lint
-            name: golangci-lint (full lint on push)
-            entry: bash -lc "if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run --config .golangci.yml ./... || (echo 'golangci-lint found issues' && exit 1); else echo 'golangci-lint not installed, skipping'; fi"
-            language: system
-            files: '\.go$'
-            pass_filenames: false
-            stages: [push]
+      # Heavy linting: golangci-lint — run on push only (CI-like), tolerant if missing
+      - id: golangci-lint
+        name: golangci-lint (full lint on push)
+        entry: bash -lc "if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run --config .golangci.yaml ./... || (echo 'golangci-lint found issues' && exit 1); else echo 'golangci-lint not installed, skipping'; fi"
+        language: system
+        files: '\.go$'
+        pass_filenames: false
+        stages: [push]
