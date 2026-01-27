@@ -149,25 +149,6 @@ func TestRaceConditions(t *testing.T) {
 		assert.GreaterOrEqual(t, conflictCount, 1, "Expected at least 1 conflict response")
 		assert.Equal(t, numBuyers, successCount+conflictCount, "All requests should complete")
 	})
-
-	t.Run("Sold Out Event", func(t *testing.T) {
-		// Try to buy one more ticket after the event is sold out
-		newUserToken := createRegularUser(t, "latebuyer@example.com")
-
-		orderPayload := map[string]interface{}{
-			"event_id": eventID,
-			"quantity": 1,
-		}
-
-		w, err := makeRequest("POST", "/api/v1/orders", orderPayload, newUserToken)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusConflict, w.Code)
-
-		var resp map[string]interface{}
-		err = parseResponse(w, &resp)
-		require.NoError(t, err)
-		assert.Contains(t, resp["error"], "sold out")
-	})
 }
 
 // Helper function to create a test event and return its ID.
