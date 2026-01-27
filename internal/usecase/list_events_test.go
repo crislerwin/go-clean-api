@@ -31,7 +31,7 @@ func (m *EventListRepoMock) Create(ctx context.Context, event *entity.Event) err
 	return args.Error(0)
 }
 
-func (m *EventListRepoMock) GetByID(ctx context.Context, eventID string) (*entity.Event, error) {
+func (m *EventListRepoMock) GetByID(ctx context.Context, eventID string, forUpdate bool) (*entity.Event, error) {
 	args := m.Called(ctx, eventID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

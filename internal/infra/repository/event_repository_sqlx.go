@@ -73,12 +73,16 @@ func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) e
 	return err
 }
 
-func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string) (*entity.Event, error) {
+func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string, forUpdate bool) (*entity.Event, error) {
 	query := `
 		SELECT id, name, location, organization, rating, date, capacity, price, image_url
 		FROM events
 		WHERE id = $1
 	`
+	if forUpdate {
+		query += " FOR UPDATE"
+	}
+
 	executor := database.GetExecutor(ctx, r.db)
 	var event entity.Event
 	err := sqlx.GetContext(ctx, executor, &event, query, eventID)
