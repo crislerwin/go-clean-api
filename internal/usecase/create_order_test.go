@@ -53,7 +53,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 2,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(&entity.Event{
 					ID:       eventID,
 					Capacity: 10,
 					Price:    10.0,
@@ -73,7 +73,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 1,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(nil, errors.New("not found"))
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(nil, errors.New("not found"))
 			},
 			expectedError: errors.New("not found"),
 		},
@@ -85,7 +85,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 6,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(&entity.Event{
 					ID:       eventID,
 					Capacity: 10,
 				}, nil)
@@ -101,10 +101,12 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 0,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(&entity.Event{
 					ID:       eventID,
 					Capacity: 10,
+					Price:    10.0,
 				}, nil)
+				eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID.String()).Return(0, nil)
 			},
 			expectedError: entity.ErrInvalidQuantity,
 		},
@@ -116,7 +118,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 1,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(&entity.Event{
 					ID:       eventID,
 					Capacity: 10,
 				}, nil)
@@ -132,9 +134,10 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				Quantity: 1,
 			},
 			setupMocks: func(eventRepo *MockEventRepository, orderRepo *MockOrderRepository) {
-				eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(&entity.Event{
+				eventRepo.On("GetByID", mock.Anything, eventID.String(), true).Return(&entity.Event{
 					ID:       eventID,
 					Capacity: 10,
+					Price:    10.0,
 				}, nil)
 				eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID.String()).Return(0, nil)
 				orderRepo.On("Save", mock.Anything, mock.Anything).Return(errors.New("save error"))
