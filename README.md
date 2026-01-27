@@ -203,13 +203,11 @@ These routes require authentication AND the `admin` role:
       "capacity": 100000,
       "price": 100.0,
       "image_url": "http://example.com/image.jpg"
-    }
+      - **Response**: `201 Created` with event details
     ```
-  - **Response**: `201 Created` with event details
 
 ## TODO
 
-- [ ] Add e2e tests
 - [ ] Add edit user endpoint
 - [ ] Add edit event endpoint
 - [ ] Add event description field
