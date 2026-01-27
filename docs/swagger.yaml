@@ -18,6 +18,27 @@ definitions:
       role:
         type: string
     type: object
+  github_com_crislerwin_go-clean-api_internal_usecase.ListEventsOutputDTO:
+    properties:
+      capacity:
+        type: integer
+      date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+      price:
+        type: number
+      rating:
+        type: string
+    type: object
   github_com_crislerwin_go-clean-api_internal_usecase.ListOrdersOutputDTO:
     properties:
       created_at:
@@ -138,6 +159,28 @@ info:
   version: "1.0"
 paths:
   /events:
+    get:
+      consumes:
+      - application/json
+      description: List all available events
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.ListEventsOutputDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all events
+      tags:
+      - events
     post:
       consumes:
       - application/json
