@@ -3,19 +3,10 @@ run:
   timeout: 5m
   tests: true
   skip-dirs:
-    - docs
-    - "docs"
+    - ^docs$
 
   # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
   go: "1.25"
-  issues:
-    exclude-files:
-      - "_test\\.go$"
-    exclude-dirs:
-      - mocks
-
-      - vendor
-      - docs
 
 linters:
   disable-all: true
@@ -63,6 +54,13 @@ formatters:
       simplify: true
 
 issues:
+  exclude-dirs:
+    - mocks
+    - vendor
+    - docs
+  exclude-files:
+    - "_test\\.go$"
+    - "docs/docs\\.go"
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
@@ -82,6 +80,9 @@ issues:
     - path: (.+)_test\.go
       linters:
         - typecheck
+    - path: docs/
+      linters:
+        - "*"
 
 cache:
   enabled: true

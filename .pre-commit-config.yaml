@@ -2,6 +2,7 @@
 # - Run lightweight hygiene checks (trailing whitespace, EOF fixer, YAML)
 # - Run formatting, vet and security checks locally on commit (fast & tolerant)
 # - Run golangci-lint in CI/on push only (heavier linting)
+exclude: ^docs/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
