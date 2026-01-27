@@ -54,13 +54,13 @@ swagger:
 
 migration-new:
 	@read -p "Enter migration name: " name; \
-	goose -dir sql/migrations postgres "$(DATABASE_URL)" create $$name sql
+	@goose -dir sql/migrations postgres "$(DATABASE_URL)" create $$name sql
 
 migration-up:
-	goose -dir sql/migrations postgres "$(DATABASE_URL)" up
+	@goose -dir sql/migrations postgres "$(DATABASE_URL)" up
 
 migration-down:
-	goose -dir sql/migrations postgres "$(DATABASE_URL)" down
+	@goose -dir sql/migrations postgres "$(DATABASE_URL)" down
 
 fmt:
 	$(GO) fmt $(APP_PATH)
