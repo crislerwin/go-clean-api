@@ -74,11 +74,12 @@ func main() {
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+	listEventsUseCase := usecase.NewListEventsUseCase(eventRepo)
 
 	// Handler
 	userHandler := handler.NewUserHandler(signUpUseCase, usecase.NewGetUserUseCase(userRepo))
 	authHandler := handler.NewAuthHandler(loginUseCase)
-	eventHandler := handler.NewEventHandler(createEventUseCase)
+	eventHandler := handler.NewEventHandler(createEventUseCase, listEventsUseCase)
 	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
 
 	// Router
@@ -101,6 +102,7 @@ func main() {
 	// Public routes
 	api.POST("/signup", userHandler.SignUp)
 	api.POST("/login", authHandler.Login)
+	api.GET("/events", eventHandler.ListEvents)
 
 	// Protected routes
 	protected := api.Group("/")

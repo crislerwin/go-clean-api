@@ -59,6 +59,14 @@ func (m *EventRepoMock) GetByID(ctx context.Context, eventID string) (*entity.Ev
 	return args.Get(0).(*entity.Event), args.Error(1)
 }
 
+func (m *EventRepoMock) ListAll(ctx context.Context) ([]*entity.Event, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Event), args.Error(1)
+}
+
 type TxManagerMock struct {
 	mock.Mock
 }

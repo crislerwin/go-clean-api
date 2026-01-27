@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,8 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 	setup := func() (*testDeps, *gin.Engine) {
 		eventRepo := &EventRepoMock{}
 		uc := usecase.NewCreateEventUseCase(eventRepo, nil)
-		handler := NewEventHandler(uc)
+		listUc := usecase.NewListEventsUseCase(eventRepo)
+		handler := NewEventHandler(uc, listUc)
 
 		r := gin.New()
 		r.POST("/events", handler.CreateEvent)
@@ -127,4 +129,63 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 			deps.eventRepo.AssertExpectations(t)
 		})
 	}
+}
+
+func TestEventHandler_ListEvents(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	type testDeps struct {
+		eventRepo *EventRepoMock
+		handler   *EventHandler
+	}
+
+	setup := func() (*testDeps, *gin.Engine) {
+		eventRepo := &EventRepoMock{}
+		uc := usecase.NewCreateEventUseCase(eventRepo, nil)
+		listUc := usecase.NewListEventsUseCase(eventRepo)
+		handler := NewEventHandler(uc, listUc)
+
+		r := gin.New()
+		r.GET("/events", handler.ListEvents)
+
+		return &testDeps{
+			eventRepo: eventRepo,
+			handler:   handler,
+		}, r
+	}
+
+	t.Run("should list events successfully", func(t *testing.T) {
+		deps, r := setup()
+
+		mockEvents := []*entity.Event{
+			{Name: "Event 1"},
+			{Name: "Event 2"},
+		}
+
+		deps.eventRepo.On("ListAll", mock.Anything).Return(mockEvents, nil)
+
+		req, _ := http.NewRequest("GET", "/events", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), "Event 1")
+		assert.Contains(t, w.Body.String(), "Event 2")
+		deps.eventRepo.AssertExpectations(t)
+	})
+
+	t.Run("should return internal server error when usecase fails", func(t *testing.T) {
+		deps, r := setup()
+
+		deps.eventRepo.On("ListAll", mock.Anything).Return(([]*entity.Event)(nil), assert.AnError)
+
+		req, _ := http.NewRequest("GET", "/events", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		deps.eventRepo.AssertExpectations(t)
+	})
 }

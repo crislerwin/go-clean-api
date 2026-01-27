@@ -87,3 +87,17 @@ func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string) (*ent
 	}
 	return &event, nil
 }
+
+func (r *EventRepositorySQLx) ListAll(ctx context.Context) ([]*entity.Event, error) {
+	query := `
+		SELECT id, name, location, organization, rating, date, capacity, price, image_url
+		FROM events
+	`
+	executor := database.GetExecutor(ctx, r.db)
+	var events []*entity.Event
+	err := sqlx.SelectContext(ctx, executor, &events, query)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
+}
