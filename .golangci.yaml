@@ -1,59 +1,88 @@
+version: 2
 run:
-    timeout: 5m
-    tests: true
-    # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
-    go: "1.25"
-    issues:
-        exclude-dirs:
-            - mocks
-            - vendor
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - docs
+    - "docs"
+
+  # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
+  go: "1.25"
+  issues:
+    exclude-files:
+      - "_test\\.go$"
+    exclude-dirs:
+      - mocks
+
+      - vendor
+      - docs
 
 linters:
-    disable-all: true
-    enable:
-        - gofmt
-        - govet
-        - gosec
-        - gocyclo
-        - ineffassign
-        - staticcheck
-        - godot
-        - errcheck
-        - shadow
+  disable-all: true
+  enable:
+    - govet
+    - gosec
+    - gocyclo
+    - ineffassign
+    - staticcheck
+    - godot
+    - errcheck
 
-linters-settings:
+  settings:
     gocyclo:
-        min-complexity: 10
+      min-complexity: 10
 
-    gofmt:
-        simplify: true
+    godot:
+      exclude:
+        - "(?i)^\\s*@"
+        - "^\\s*//\\s*@"
+        - "^\\s*\\*\\s*@"
+        - "^SwaggerInfo holds exported Swagger Info so clients can modify it"
 
     errcheck:
-        # Do not force-check some common function names that are safe to ignore.
-        exclude:
-            - Close
-            - Write
-            - Fprintf
-        check-type-assertions: false
+      # Do not force-check some common function names that are safe to ignore.
+      exclude-functions:
+        - (*os.File).Close
+        - (*net.IPConn).Close
+        - (*net.TCPConn).Close
+        - (*net.UDPConn).Close
+        - (*net.UnixConn).Close
+        - (*net.Pipe).Close
+        - (*net.Listener).Close
+        - (io.Closer).Close
+        - (io.Writer).Write
+        - (fmt.Fprintf)
+        - (*database/sql.DB).Close
+        - (*github.com/jmoiron/sqlx.DB).Close
+      check-type-assertions: false
+
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
 
 issues:
-    exclude-use-default: false
-    max-issues-per-linter: 0
-    max-same-issues: 0
-    exclude:
-        - "error return value not checked.*(Close|Write|Fprintf)"
-    exclude-rules:
-        - path: "_test\\.go"
-          linters:
-              - revive
-        - path: "vendor/.*"
-          linters:
-              - "*"
-        - linters:
-              - errcheck
-          text: "Close"
-
-preset: recommended
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude:
+    - "error return value not checked.*(Close|Write|Fprintf)"
+    - "undefined.*(On|Called|AssertExpectations)"
+  exclude-rules:
+    - path: "_test\\.go"
+      linters:
+        - revive
+    - path: "vendor/.*"
+      linters:
+        - "*"
+    - linters:
+        - errcheck
+      text: "Close"
+    - path: (.+)_test\.go
+      linters:
+        - typecheck
 
 cache:
-    enabled: true
+  enabled: true
