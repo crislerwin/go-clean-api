@@ -154,27 +154,58 @@ sequenceDiagram
 
 ## 🔌 API Routes
 
-**Swagger Documentation**: [http://localhost:8080/swagger](http://localhost:8080/swagger)
+**Swagger Documentation**: [http://localhost:8080/api/v1/swagger/index.html](http://localhost:8080/api/v1/swagger/index.html)
 
-### Public
+### Public Routes
 
 - `POST /api/v1/signup`: Register a new user.
   - **Body**: `{"name": "...", "email": "...", "password": "..."}`
   - **Default Role**: `user`
-- `POST /api/v1/login`: various Authenticate and receive JWT.
+  - **Response**: `201 Created` with user details
+- `POST /api/v1/login`: Authenticate and receive JWT token.
   - **Body**: `{"email": "...", "password": "..."}`
+  - **Response**: `200 OK` with `{"token": "..."}`
+- `GET /api/v1/events`: List all available events.
+  - **Response**: `200 OK` with array of events
 
-### Protected (Authenticated)
+### Protected Routes (Requires Authentication)
 
-- `POST /api/v1/orders`: Purchase tickets.
-  - **Requires**: Role `user` or `admin`.
-  - **Body**: `{"event_id": "...", "quantity": 2}`
+All protected routes require a valid JWT token in the `Authorization` header:
 
-### Admin Only
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+- `GET /api/v1/me`: Get current user information.
+  - **Response**: `200 OK` with user details (id, name, email, role)
+- `GET /api/v1/me/events`: List events created by the authenticated user.
+  - **Response**: `200 OK` with array of user's events
+- `POST /api/v1/orders`: Purchase tickets for an event.
+  - **Body**: `{"event_id": "uuid", "quantity": 2}`
+  - **Response**: `201 Created` with order details
+  - **Note**: Handles race conditions with database-level locking
+- `GET /api/v1/orders`: List all orders for the authenticated user.
+  - **Response**: `200 OK` with array of orders
+
+### Admin Only Routes
+
+These routes require authentication AND the `admin` role:
 
 - `POST /api/v1/events`: Create a new event.
-  - **Requires**: Role `admin`.
-  - **Body**: `{"name": "...", "capacity": 100, "price": 50.0, ...}`
+  - **Body**:
+    ```json
+    {
+      "name": "Rock in Rio",
+      "location": "Rio de Janeiro",
+      "organization": "Live Nation",
+      "rating": "Livre",
+      "date": "2025-10-10T00:00:00Z",
+      "capacity": 100000,
+      "price": 100.0,
+      "image_url": "http://example.com/image.jpg"
+    }
+    ```
+  - **Response**: `201 Created` with event details
 
 ## TODO
 
