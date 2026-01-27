@@ -37,7 +37,7 @@ func (c *LoginUseCase) Execute(ctx context.Context, input LoginInputDTO) (*Login
 		return nil, errors.New("invalid credentials")
 	}
 
-	token, err := auth.GenerateToken(user.ID)
+	token, err := auth.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func TestUserRepositorySQLx_Save(t *testing.T) {
 		user, _ := entity.NewUser("John Doe", "john@example.com", "password123")
 
 		mock.ExpectExec("INSERT INTO users").
-			WithArgs(user.ID, user.Name, user.Email, user.Password).
+			WithArgs(user.ID, user.Name, user.Email, user.Password, user.Role).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err = repo.Save(context.Background(), user)
@@ -43,7 +43,7 @@ func TestUserRepositorySQLx_Save(t *testing.T) {
 		user, _ := entity.NewUser("John Doe", "john@example.com", "password123")
 
 		mock.ExpectExec("INSERT INTO users").
-			WithArgs(user.ID, user.Name, user.Email, user.Password).
+			WithArgs(user.ID, user.Name, user.Email, user.Password, user.Role).
 			WillReturnError(errors.New("db error"))
 
 		err = repo.Save(context.Background(), user)
@@ -62,10 +62,10 @@ func TestUserRepositorySQLx_GetByEmail(t *testing.T) {
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
 		repo := NewUserRepositorySQLx(sqlxDB)
 
-		rows := sqlmock.NewRows([]string{"id", "name", "email", "password"}).
-			AddRow("userid-123", "John Doe", "john@example.com", "hashedpassword")
+		rows := sqlmock.NewRows([]string{"id", "name", "email", "password", "role"}).
+			AddRow("userid-123", "John Doe", "john@example.com", "hashedpassword", "user")
 
-		mock.ExpectQuery("SELECT id, name, email, password FROM users WHERE email = ?").
+		mock.ExpectQuery("SELECT id, name, email, password, role FROM users WHERE email = ?").
 			WithArgs("john@example.com").
 			WillReturnRows(rows)
 
@@ -75,6 +75,7 @@ func TestUserRepositorySQLx_GetByEmail(t *testing.T) {
 		assert.NotNil(t, user)
 		assert.Equal(t, "John Doe", user.Name)
 		assert.Equal(t, "john@example.com", user.Email)
+		assert.Equal(t, "user", user.Role)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -86,7 +87,7 @@ func TestUserRepositorySQLx_GetByEmail(t *testing.T) {
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
 		repo := NewUserRepositorySQLx(sqlxDB)
 
-		mock.ExpectQuery("SELECT id, name, email, password FROM users WHERE email = ?").
+		mock.ExpectQuery("SELECT id, name, email, password, role FROM users WHERE email = ?").
 			WithArgs("john@example.com").
 			WillReturnError(errors.New("db error"))
 

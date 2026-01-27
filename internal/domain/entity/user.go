@@ -12,6 +12,7 @@ type User struct {
 	Name     string
 	Email    string
 	Password string
+	Role     string
 }
 
 func NewUser(name, email, password string) (*User, error) {
@@ -38,5 +39,6 @@ func NewUser(name, email, password string) (*User, error) {
 		Name:     name,
 		Email:    email,
 		Password: string(hashedPassword),
+		Role:     "user",
 	}, nil
 }

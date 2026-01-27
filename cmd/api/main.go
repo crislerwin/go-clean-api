@@ -73,7 +73,7 @@ func main() {
 	api.Use(middleware.AuthMiddleware())
 	{
 		api.POST("/orders", orderHandler.CreateOrder)
-		api.POST("/events", eventHandler.CreateEvent)
+		api.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
 	}
 
 	slog.Info("Server started on :8080")

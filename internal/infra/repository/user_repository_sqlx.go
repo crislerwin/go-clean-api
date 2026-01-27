@@ -18,13 +18,13 @@ func NewUserRepositorySQLx(db *sqlx.DB) *UserRepositorySQLx {
 }
 
 func (r *UserRepositorySQLx) Save(ctx context.Context, user *entity.User) error {
-	query := `INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)`
-	_, err := r.db.ExecContext(ctx, query, user.ID, user.Name, user.Email, user.Password)
+	query := `INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)`
+	_, err := r.db.ExecContext(ctx, query, user.ID, user.Name, user.Email, user.Password, user.Role)
 	return err
 }
 
 func (r *UserRepositorySQLx) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
-	query := `SELECT id, name, email, password FROM users WHERE email = $1`
+	query := `SELECT id, name, email, password, role FROM users WHERE email = $1`
 	var user entity.User
 	if err := r.db.GetContext(ctx, &user, query, email); err != nil {
 		return nil, err
