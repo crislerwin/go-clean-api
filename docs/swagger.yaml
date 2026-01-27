@@ -293,6 +293,37 @@ paths:
       summary: Get logged user info
       tags:
       - auth
+  /me/events:
+    get:
+      consumes:
+      - application/json
+      description: List events created by the logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.ListEventsOutputDTO'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List my events
+      tags:
+      - events
   /orders:
     get:
       consumes:
