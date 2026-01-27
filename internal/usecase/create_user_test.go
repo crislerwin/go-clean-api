@@ -24,35 +24,35 @@ func (m *ValidationMockUserRepository) GetByEmail(ctx context.Context, email str
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
-func TestCreateUserUseCase_Execute(t *testing.T) {
-	t.Run("should create a valid user", func(t *testing.T) {
+func TestSignUpUseCase_Execute(t *testing.T) {
+	t.Run("should create a new valid user", func(t *testing.T) {
 		repo := new(ValidationMockUserRepository)
-		repo.On("Save", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil)
-
-		useCase := NewCreateUserUseCase(repo)
-		input := CreateUserInputDTO{
+		useCase := NewSignUpUseCase(repo)
+		input := SignUpInputDTO{
 			Name:     "John Doe",
 			Email:    "john@example.com",
 			Password: "password123",
 		}
 
+		repo.On("Save", mock.Anything, mock.MatchedBy(func(u *entity.User) bool {
+			return u.Name == input.Name && u.Email == input.Email
+		})).Return(nil)
+
 		output, err := useCase.Execute(context.Background(), input)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, output)
+		assert.NotEmpty(t, output.ID)
 		assert.Equal(t, input.Name, output.Name)
 		assert.Equal(t, input.Email, output.Email)
-		assert.NotEmpty(t, output.ID)
 		repo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when repo fails", func(t *testing.T) {
+	t.Run("should return error when entity creation fails", func(t *testing.T) {
 		repo := new(ValidationMockUserRepository)
-		repo.On("Save", mock.Anything, mock.AnythingOfType("*entity.User")).Return(errors.New("db error"))
-
-		useCase := NewCreateUserUseCase(repo)
-		input := CreateUserInputDTO{
-			Name:     "John Doe",
+		useCase := NewSignUpUseCase(repo)
+		input := SignUpInputDTO{
+			Name:     "", // Invalid name
 			Email:    "john@example.com",
 			Password: "password123",
 		}
@@ -61,6 +61,24 @@ func TestCreateUserUseCase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		repo.AssertExpectations(t)
+		// We can assert generic error message or specific if we want
+	})
+
+	t.Run("should return error when repository fails", func(t *testing.T) {
+		repo := new(ValidationMockUserRepository)
+		useCase := NewSignUpUseCase(repo)
+		input := SignUpInputDTO{
+			Name:     "John Doe",
+			Email:    "john@example.com",
+			Password: "password123",
+		}
+
+		repo.On("Save", mock.Anything, mock.Anything).Return(errors.New("db error"))
+
+		output, err := useCase.Execute(context.Background(), input)
+
+		assert.Error(t, err)
+		assert.Nil(t, output)
+		assert.Equal(t, "db error", err.Error())
 	})
 }
