@@ -50,22 +50,16 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 		return nil, err
 	}
 
-	event, err := uc.eventRepo.GetByID(ctx, input.EventID)
-	if err != nil {
-		return nil, err
-	}
-
-	order, err := entity.NewOrder(eventID, userID, input.Quantity, event.Price)
-	if err != nil {
-		return nil, err
-	}
+	var order *entity.Order
 
 	err = uc.txManager.Do(ctx, func(ctxTx context.Context) error {
-		// We already have the event matching the ID, and we can check capacity directly if we trust the fetched event.
-		// However, for consistency with current logic which might use checking capacity:
-		// But GetByID returns the event struct which has Capacity.
-		// Optimization: Use event.Capacity directly instead of calling GetTotalCapacity again.
+		// Lock the event row to prevent race conditions
+		event, err := uc.eventRepo.GetByID(ctxTx, input.EventID, true)
+		if err != nil {
+			return err
+		}
 
+		// Check sold tickets count within the same transaction
 		sold, err := uc.eventRepo.GetSoldTicketsCount(ctxTx, input.EventID)
 		if err != nil {
 			return err
@@ -73,6 +67,12 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 
 		if (sold + input.Quantity) > event.Capacity {
 			return ErrEventSoldOut
+		}
+
+		// Create the order
+		order, err = entity.NewOrder(eventID, userID, input.Quantity, event.Price)
+		if err != nil {
+			return err
 		}
 
 		if err := uc.orderRepo.Save(ctxTx, order); err != nil {

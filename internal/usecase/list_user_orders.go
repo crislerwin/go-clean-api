@@ -42,7 +42,7 @@ func (uc *ListUserOrdersUseCase) Execute(ctx context.Context, userID string) ([]
 		// Enricht with Event details
 		// NOTE: This N+1 query pattern is acceptable for now given assumed low volume of user orders.
 		// For high volume, we should join in repo or use DataLoader/Batching.
-		event, err := uc.eventRepo.GetByID(ctx, order.EventID.String())
+		event, err := uc.eventRepo.GetByID(ctx, order.EventID.String(), false)
 		if err == nil && event != nil { // Best effort enrichment
 			eventName = event.Name
 			eventDate = event.Date

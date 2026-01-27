@@ -1,5 +1,7 @@
+version: "3.8"
+
 services:
-  # Serviço da API
+  # Serviço da API (Aplicação Principal)
   app:
     build: .
     container_name: go-clean-api-app
@@ -12,7 +14,7 @@ services:
     networks:
       - go-clean-api-network
 
-  # Serviço do Banco de Dados
+  # Serviço do Banco de Dados (Desenvolvimento)
   db:
     image: postgres:15-alpine
     container_name: go-clean-api-db
@@ -21,9 +23,31 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432" # Exposto para você acessar via DBeaver/PgAdmin
+      - "5432:5432" # Porta padrão
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Se quiser que o init.sql rode no dev também, descomente abaixo:
+      # - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - go-clean-api-network
+
+  # --- NOVO: Serviço de Banco de Dados para Testes E2E ---
+  db_test:
+    image: postgres:15-alpine
+    container_name: go-clean-api-db-test
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: ticket_db_test
+    ports:
+      - "5433:5432" # Mapeia a porta interna 5432 para a 5433 do seu host
+    # Tmpfs: Roda o banco na Memória RAM.
+    # Vantagem: Extrema velocidade para testes e limpeza automática ao reiniciar.
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      # Opcional: Injeta o schema automaticamente ao subir o teste
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - go-clean-api-network
 

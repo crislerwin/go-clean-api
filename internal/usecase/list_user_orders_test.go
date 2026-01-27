@@ -36,7 +36,7 @@ func TestListUserOrdersUseCase_Execute(t *testing.T) {
 	}
 
 	mockOrderRepo.On("GetByUserID", ctx, userID).Return(orders, nil)
-	mockEventRepo.On("GetByID", ctx, eventID.String()).Return(event, nil)
+	mockEventRepo.On("GetByID", ctx, eventID.String(), false).Return(event, nil)
 
 	output, err := useCase.Execute(ctx, userID)
 

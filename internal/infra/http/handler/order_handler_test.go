@@ -54,7 +54,7 @@ func (m *EventRepoMock) Create(ctx context.Context, event *entity.Event) error {
 	return args.Error(0)
 }
 
-func (m *EventRepoMock) GetByID(ctx context.Context, eventID string) (*entity.Event, error) {
+func (m *EventRepoMock) GetByID(ctx context.Context, eventID string, forUpdate bool) (*entity.Event, error) {
 	args := m.Called(ctx, eventID)
 	return args.Get(0).(*entity.Event), args.Error(1)
 }

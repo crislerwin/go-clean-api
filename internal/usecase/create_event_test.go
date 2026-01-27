@@ -31,8 +31,8 @@ func (m *MockEventRepository) Create(ctx context.Context, event *entity.Event) e
 	return args.Error(0)
 }
 
-func (m *MockEventRepository) GetByID(ctx context.Context, eventID string) (*entity.Event, error) {
-	args := m.Called(ctx, eventID)
+func (m *MockEventRepository) GetByID(ctx context.Context, eventID string, forUpdate bool) (*entity.Event, error) {
+	args := m.Called(ctx, eventID, forUpdate)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
