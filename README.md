@@ -4,55 +4,69 @@ A robust Ticketing System implementation showcasing **Clean Architecture**, **Do
 
 ## 🚀 Overview
 
-This project implements a ticket purchasing flow where high concurrency and data consistency are critical. It acts as a reference implementation for handling complex business rules and race conditions (e.g., preventing overselling of tickets) within a clean, maintainable codebase.
+This project implements a high-concurrency ticket purchasing system where data consistency is paramount. It serves as a reference for handling complex business rules (e.g., race conditions, atomic transactions) within a maintainable, modular codebase.
 
 **Key Concepts:**
 
-- **Clean Architecture**: Strict separation of concerns to ensure testability and independence from frameworks.
-- **DDD (Domain-Driven Design)**: Business logic is encapsulated in rich domain models (`Order`, `Ticket`).
-- **TDD (Test-Driven Development)**: Development driven by tests to ensure correctness from the start.
+- **Clean Architecture**: Decoupled layers (Domain, UseCase, Infrastructure, Presentation) ensuring testability.
+- **DDD (Domain-Driven Design)**: Rich domain models encapsulate business logic (`Order`, `Ticket`).
+- **TDD (Test-Driven Development)**: Comprehensive test coverage for all layers.
+- **RBAC (Role-Based Access Control)**: Secure access tailored for `User` and `Admin` roles.
 
 ## 🛠️ Tech Stack
 
 - **Language**: Go 1.25+
-- **Testing**: `testify` for assertions and suites
-- **Linter**: `golangci-lint`
-- **Utilities**: `google/uuid`
+- **Framework**: [Gin](https://github.com/gin-gonic/gin) (HTTP Web Framework)
+- **Database**: PostgreSQL (Driver: `pgx`, Helper: `sqlx`)
+- **Authentication**: JWT (`golang-jwt/jwt/v5`)
+- **Migrations**: Goose
+- **Testing**: Testify, SQLMock
+- **Utilities**: Google UUID, Bcrypt
 
 ## 📂 Project Structure
 
 ```text
 .
+├── cmd/api         # Application entrypoint
 ├── internal
-│   ├── domain    # Enterprise Business Rules (Entities)
-│   ├── usecase   # Application Business Rules
-│   └── infra     # Frameworks & Drivers (Database, etc.)
-├── Makefile      # Automation commands
-├── go.mod        # Dependency definitions
-└── README.md     # Documentation
+│   ├── domain      # Enterprise Business Rules (Entities)
+│   ├── usecase     # Application Business Rules (Interactors)
+│   └── infra       # Frameworks & Drivers
+│       ├── database    # DB Connection & Transactions
+│       ├── http        # Handlers, Middleware, Routes
+│       └── repository  # Data Access Implementation
+├── sql/migrations  # Database schema migrations
+└── Makefile        # Automation commands
 ```
 
 ## ⚡ Getting Started
 
 ### Prerequisites
 
-- Go installed (1.25+)
+- Go 1.25+
+- Docker & Docker Compose
 - Make
 
-### Verified Commands
+### Quick Start
 
-You can use the included `Makefile` to run common tasks:
+1.  **Start Services**:
 
-```bash
-# Run all tests
-make test
+    ```bash
+    make run
+    # OR
+    docker-compose up -d
+    ```
 
-# Run linter
-make lint
+2.  **Run Migrations**:
 
-# Run code formatting
-make fmt
-```
+    ```bash
+    make migration-up
+    ```
+
+3.  **Run Tests**:
+    ```bash
+    make test
+    ```
 
 ## 📐 Architecture Diagrams
 
@@ -61,52 +75,47 @@ make fmt
 ```mermaid
 classDiagram
     class User {
-        +UUID id
-        +String name
-        +String email
+        +UUID ID
+        +String Name
+        +String Email
+        +String Password
+        +String Role
     }
 
     class Event {
-        +UUID id
-        +String eventName
-        +Int totalCapacity
-        +Decimal basePrice
+        +UUID ID
+        +String Name
+        +String Location
+        +String Organization
+        +String Rating
+        +DateTime Date
+        +String ImageURL
+        +Int Capacity
+        +Decimal Price
     }
 
     class Order {
-        +UUID id
-        +UUID userId
-        +Status status
-        +Decimal totalAmount
-        +DateTime expiresAt
+        +UUID ID
+        +UUID EventID
+        +UUID UserID
+        +Decimal TotalAmount
+        +Int Quantity
+        +String Status
+        +DateTime CreatedAt
     }
 
     class Ticket {
-        +UUID id
-        +UUID orderId
-        +UUID eventId
-        +String ticketNumber
-        +Decimal soldPrice
-        +Status status
+        +UUID ID
+        +UUID EventID
+        +UUID OrderID
+        +Decimal Price
+        +String Status
     }
 
-    class PaymentMethod {
-        +UUID id
-        +UUID userId
-        +String gatewayToken
-        +String lastFourDigits
-        +String brand
-    }
-
-    User "1" -- "N" Order : creates
-    User "1" -- "N" PaymentMethod : owns
-    Order "1" -- "N" Ticket : contains
-    Order "1" -- "0..1" PaymentMethod : uses
+    User "1" -- "N" Order : places
     Event "1" -- "N" Ticket : defines
-    PaymentMethod "1" -- "1" Order : processes
-    Ticket "1" -- "1" Event : defines
-    Ticket "1" -- "1" Order : belongs_to
-    Order "1" -- "1" PaymentMethod : uses
+    Order "1" -- "N" Ticket : contains
+    Ticket "1" -- "1" Event : belongs_to
 ```
 
 ### Purchase Flow (Sequence Diagram)
@@ -116,33 +125,51 @@ This diagram illustrates the critical section handling for ticket purchasing to 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant API as Ticket API (Go)
-    participant DB as Database (Postgres)
+    participant API as Ticket API
+    participant DB as Postgres
 
-    Note over U, API: O usuário seleciona 2 ingressos para o Evento X
+    Note over U, API: User selects 2 tickets for Event X
     U->>API: POST /orders {eventId, qty: 2}
 
     rect rgb(240, 240, 240)
-        Note right of API: Início da Transação (Critical Section)
+        Note right of API: Transaction Start (Critical Section)
         API->>DB: BEGIN TRANSACTION
 
-        %% A query mágica que valida o estoque real
-        API->>DB: SELECT count(*) FROM tickets t <br/>JOIN orders o ON t.order_id = o.id <br/>WHERE t.event_id = X <br/>AND o.status IN ('PENDING', 'PAID')
-        DB-->>API: return current_sold_count (ex: 98)
+        API->>DB: SELECT capacity ... FOR UPDATE
+        DB-->>API: Row Lock (Event Info)
 
-        API->>API: Check: (Capacity 100 - Sold 98) >= 2?
+        API->>API: Calculate Available Capacity
 
-        alt Estoque Suficiente
-            API->>DB: INSERT INTO orders (status='PENDING', expires_at=now()+15m) RETURNING id
-            DB-->>API: order_id
-
-            API->>DB: INSERT INTO tickets (order_id, event_id, price...) VALUES (x2)
-
+        alt Sufficient Stock
+            API->>DB: INSERT INTO orders (PENDING)
+            API->>DB: INSERT INTO tickets (x2)
             API->>DB: COMMIT
-            API-->>U: 201 Created {orderId, status: 'PENDING', expiration: '15min'}
-        else Estoque Insuficiente
+            API-->>U: 201 Created
+        else Insufficient Stock
             API->>DB: ROLLBACK
             API-->>U: 409 Conflict (Sold Out)
         end
     end
 ```
+
+## 🔌 API Routes
+
+### Public
+
+- `POST /api/v1/signup`: Register a new user.
+  - **Body**: `{"name": "...", "email": "...", "password": "..."}`
+  - **Default Role**: `user`
+- `POST /api/v1/login`: various Authenticate and receive JWT.
+  - **Body**: `{"email": "...", "password": "..."}`
+
+### Protected (Authenticated)
+
+- `POST /api/v1/orders`: Purchase tickets.
+  - **Requires**: Role `user` or `admin`.
+  - **Body**: `{"event_id": "...", "quantity": 2}`
+
+### Admin Only
+
+- `POST /api/v1/events`: Create a new event.
+  - **Requires**: Role `admin`.
+  - **Body**: `{"name": "...", "capacity": 100, "price": 50.0, ...}`
