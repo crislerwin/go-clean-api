@@ -15,12 +15,14 @@ type CreateOrderRequest struct {
 }
 
 type OrderHandler struct {
-	createOrderUseCase *usecase.CreateOrderUseCase
+	createOrderUseCase    *usecase.CreateOrderUseCase
+	listUserOrdersUseCase *usecase.ListUserOrdersUseCase
 }
 
-func NewOrderHandler(createOrderUseCase *usecase.CreateOrderUseCase) *OrderHandler {
+func NewOrderHandler(create *usecase.CreateOrderUseCase, list *usecase.ListUserOrdersUseCase) *OrderHandler {
 	return &OrderHandler{
-		createOrderUseCase: createOrderUseCase,
+		createOrderUseCase:    create,
+		listUserOrdersUseCase: list,
 	}
 }
 
@@ -75,5 +77,32 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	slog.Info("Order created successfully", "order_id", output.ID, "user_id", userID, "event_id", input.EventID)
 	c.JSON(http.StatusCreated, output)
+}
 
+// ListMyOrders godoc
+// @Summary      List my orders
+// @Description  List all orders for the authenticated user
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   usecase.ListOrdersOutputDTO
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /orders [get]
+func (h *OrderHandler) ListMyOrders(c *gin.Context) {
+	userID, ok := auth.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	orders, err := h.listUserOrdersUseCase.Execute(c.Request.Context(), userID)
+	if err != nil {
+		slog.Error("Error listing orders", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, orders)
 }

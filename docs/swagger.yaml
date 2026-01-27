@@ -7,6 +7,25 @@ definitions:
       name:
         type: string
     type: object
+  github_com_crislerwin_go-clean-api_internal_usecase.ListOrdersOutputDTO:
+    properties:
+      created_at:
+        type: string
+      event_date:
+        type: string
+      event_id:
+        type: string
+      event_name:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: number
+    type: object
   github_com_crislerwin_go-clean-api_internal_usecase.OrderOutputDTO:
     properties:
       created_at:
@@ -33,6 +52,7 @@ definitions:
         minimum: 1
         type: integer
       date:
+        example: "2025-10-10T00:00:00Z"
         type: string
       image_url:
         type: string
@@ -191,6 +211,36 @@ paths:
       tags:
       - auth
   /orders:
+    get:
+      consumes:
+      - application/json
+      description: List all orders for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.ListOrdersOutputDTO'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List my orders
+      tags:
+      - orders
     post:
       consumes:
       - application/json
@@ -274,6 +324,7 @@ paths:
       - auth
 securityDefinitions:
   BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
     in: header
     name: Authorization
     type: apiKey

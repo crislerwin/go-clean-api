@@ -68,16 +68,20 @@ func main() {
 
 	orderRepo := repository.NewOrderRepositorySQLx(db)
 
-	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
-	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
+	// UseCase
 	signUpUseCase := usecase.NewSignUpUseCase(userRepo)
 	loginUseCase := usecase.NewLoginUseCase(userRepo)
+	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
+	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
+	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
 
-	orderHandler := handler.NewOrderHandler(createOrderUseCase)
-	eventHandler := handler.NewEventHandler(createEventUseCase)
+	// Handler
 	userHandler := handler.NewUserHandler(signUpUseCase)
 	authHandler := handler.NewAuthHandler(loginUseCase)
+	eventHandler := handler.NewEventHandler(createEventUseCase)
+	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
 
+	// Router
 	r := gin.Default()
 
 	trustedProxies := os.Getenv("TRUSTED_PROXIES")
@@ -87,22 +91,23 @@ func main() {
 		}
 	}
 
-	r.GET("/swagger", func(c *gin.Context) {
+	api := r.Group("/api/v1")
+	// Swagger Redirect
+	api.GET("/swagger", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 	})
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	api := r.Group("/api/v1")
+	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Public routes
 	api.POST("/signup", userHandler.SignUp)
 	api.POST("/login", authHandler.Login)
 
-	api.Use(middleware.AuthMiddleware())
-	{
-		api.POST("/orders", orderHandler.CreateOrder)
-		api.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
-	}
+	// Protected routes
+	protected := api.Group("/")
+	protected.Use(middleware.AuthMiddleware())
+	protected.POST("/orders", orderHandler.CreateOrder)
+	protected.GET("/orders", orderHandler.ListMyOrders)
+	protected.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
 
 	slog.Info("Server started on :8080")
 	if err := r.Run(":8080"); err != nil {

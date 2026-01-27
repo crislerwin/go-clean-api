@@ -24,6 +24,11 @@ func (m *MockOrderRepository) Save(ctx context.Context, order *entity.Order) err
 	return args.Error(0)
 }
 
+func (m *MockOrderRepository) GetByUserID(ctx context.Context, userID string) ([]*entity.Order, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).([]*entity.Order), args.Error(1)
+}
+
 type MockTransactionManager struct{}
 
 func (m *MockTransactionManager) Do(ctx context.Context, fn func(ctx context.Context) error) error {

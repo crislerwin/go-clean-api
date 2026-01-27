@@ -44,3 +44,20 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 
 	return nil
 }
+
+func (r *OrderRepositorySQLx) GetByUserID(ctx context.Context, userID string) ([]*entity.Order, error) {
+	query := `
+		SELECT id, event_id, user_id, quantity, total_amount, status, created_at
+		FROM orders
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`
+
+	var orders []*entity.Order
+	err := r.db.SelectContext(ctx, &orders, query, userID)
+	if err != nil {
+		return nil, postgres.TranslateError(err)
+	}
+
+	return orders, nil
+}
