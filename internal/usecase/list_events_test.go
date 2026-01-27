@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -46,12 +47,20 @@ func (m *EventListRepoMock) ListAll(ctx context.Context) ([]*entity.Event, error
 	return args.Get(0).([]*entity.Event), args.Error(1)
 }
 
+func (m *EventListRepoMock) ListByUserID(ctx context.Context, userID string) ([]*entity.Event, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Event), args.Error(1)
+}
+
 func TestListEventsUseCase_Execute(t *testing.T) {
 	t.Run("should list events successfully", func(t *testing.T) {
 		repo := new(EventListRepoMock)
 		useCase := NewListEventsUseCase(repo)
 
-		event, _ := entity.NewEvent("Event 1", "Location", "Org", "Livre", time.Now().Add(time.Hour), 100, 10.0, "img")
+		event, _ := entity.NewEvent(uuid.New(), "Event 1", "Location", "Org", "Livre", time.Now().Add(time.Hour), 100, 10.0, "img")
 		events := []*entity.Event{event}
 
 		repo.On("ListAll", mock.Anything).Return(events, nil)

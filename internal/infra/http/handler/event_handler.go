@@ -21,14 +21,20 @@ type CreateEventRequest struct {
 }
 
 type EventHandler struct {
-	createEventUseCase *usecase.CreateEventUseCase
-	listEventsUseCase  *usecase.ListEventsUseCase
+	createEventUseCase    *usecase.CreateEventUseCase
+	listEventsUseCase     *usecase.ListEventsUseCase
+	listUserEventsUseCase *usecase.ListUserEventsUseCase
 }
 
-func NewEventHandler(createEventUseCase *usecase.CreateEventUseCase, listEventsUseCase *usecase.ListEventsUseCase) *EventHandler {
+func NewEventHandler(
+	createEventUseCase *usecase.CreateEventUseCase,
+	listEventsUseCase *usecase.ListEventsUseCase,
+	listUserEventsUseCase *usecase.ListUserEventsUseCase,
+) *EventHandler {
 	return &EventHandler{
-		createEventUseCase: createEventUseCase,
-		listEventsUseCase:  listEventsUseCase,
+		createEventUseCase:    createEventUseCase,
+		listEventsUseCase:     listEventsUseCase,
+		listUserEventsUseCase: listUserEventsUseCase,
 	}
 }
 
@@ -66,7 +72,13 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 		ImageURL:     req.ImageURL,
 	}
 
-	output, err := h.createEventUseCase.Execute(c.Request.Context(), input)
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	output, err := h.createEventUseCase.Execute(c.Request.Context(), userID.(string), input)
 	if err != nil {
 		if err == entity.ErrDateInPast || err == entity.ErrInvalidEventData {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -94,6 +106,34 @@ func (h *EventHandler) ListEvents(c *gin.Context) {
 	output, err := h.listEventsUseCase.Execute(c.Request.Context())
 	if err != nil {
 		slog.Error("Error listing events", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
+}
+
+// ListMyEvents godoc
+// @Summary      List my events
+// @Description  List events created by the logged-in user
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   usecase.ListEventsOutputDTO
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /me/events [get]
+func (h *EventHandler) ListMyEvents(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	output, err := h.listUserEventsUseCase.Execute(c.Request.Context(), userID.(string))
+	if err != nil {
+		slog.Error("Error listing user events", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}

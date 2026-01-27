@@ -27,9 +27,14 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 		eventRepo := &EventRepoMock{}
 		uc := usecase.NewCreateEventUseCase(eventRepo, nil)
 		listUc := usecase.NewListEventsUseCase(eventRepo)
-		handler := NewEventHandler(uc, listUc)
+		listUserUc := usecase.NewListUserEventsUseCase(eventRepo)
+		handler := NewEventHandler(uc, listUc, listUserUc)
 
 		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("userID", "5334d5d7-e5d8-4d56-9257-2b7b5e5d3c8a")
+			c.Next()
+		})
 		r.POST("/events", handler.CreateEvent)
 
 		return &testDeps{
@@ -143,7 +148,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 		eventRepo := &EventRepoMock{}
 		uc := usecase.NewCreateEventUseCase(eventRepo, nil)
 		listUc := usecase.NewListEventsUseCase(eventRepo)
-		handler := NewEventHandler(uc, listUc)
+		listUserUc := usecase.NewListUserEventsUseCase(eventRepo)
+		handler := NewEventHandler(uc, listUc, listUserUc)
 
 		r := gin.New()
 		r.GET("/events", handler.ListEvents)
@@ -181,6 +187,70 @@ func TestEventHandler_ListEvents(t *testing.T) {
 		deps.eventRepo.On("ListAll", mock.Anything).Return(([]*entity.Event)(nil), assert.AnError)
 
 		req, _ := http.NewRequest("GET", "/events", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		deps.eventRepo.AssertExpectations(t)
+	})
+}
+
+func TestEventHandler_ListMyEvents(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	type testDeps struct {
+		eventRepo *EventRepoMock
+		handler   *EventHandler
+	}
+
+	setup := func() (*testDeps, *gin.Engine) {
+		eventRepo := &EventRepoMock{}
+		uc := usecase.NewCreateEventUseCase(eventRepo, nil)
+		listUc := usecase.NewListEventsUseCase(eventRepo)
+		listUserUc := usecase.NewListUserEventsUseCase(eventRepo) // Added usecase
+		handler := NewEventHandler(uc, listUc, listUserUc)
+
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("userID", "5334d5d7-e5d8-4d56-9257-2b7b5e5d3c8a")
+			c.Next()
+		})
+		r.GET("/me/events", handler.ListMyEvents)
+
+		return &testDeps{
+			eventRepo: eventRepo,
+			handler:   handler,
+		}, r
+	}
+
+	t.Run("should list user events successfully", func(t *testing.T) {
+		deps, r := setup()
+
+		mockEvents := []*entity.Event{
+			{Name: "My Event 1"},
+			{Name: "My Event 2"},
+		}
+
+		deps.eventRepo.On("ListByUserID", mock.Anything, "5334d5d7-e5d8-4d56-9257-2b7b5e5d3c8a").Return(mockEvents, nil)
+
+		req, _ := http.NewRequest("GET", "/me/events", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), "My Event 1")
+		assert.Contains(t, w.Body.String(), "My Event 2")
+		deps.eventRepo.AssertExpectations(t)
+	})
+
+	t.Run("should return internal server error when usecase fails", func(t *testing.T) {
+		deps, r := setup()
+
+		deps.eventRepo.On("ListByUserID", mock.Anything, "5334d5d7-e5d8-4d56-9257-2b7b5e5d3c8a").Return(([]*entity.Event)(nil), assert.AnError)
+
+		req, _ := http.NewRequest("GET", "/me/events", nil)
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)

@@ -47,6 +47,14 @@ func (m *MockEventRepository) ListAll(ctx context.Context) ([]*entity.Event, err
 	return args.Get(0).([]*entity.Event), args.Error(1)
 }
 
+func (m *MockEventRepository) ListByUserID(ctx context.Context, userID string) ([]*entity.Event, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Event), args.Error(1)
+}
+
 func TestCreateEventUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -127,7 +135,8 @@ func TestCreateEventUseCase_Execute(t *testing.T) {
 			tt.setupRepo(mockRepo)
 
 			useCase := NewCreateEventUseCase(mockRepo, nil) // TransactionManager unused in CreateEvent
-			output, err := useCase.Execute(context.TODO(), tt.input)
+			userID := "5334d5d7-e5d8-4d56-9257-2b7b5e5d3c8a"
+			output, err := useCase.Execute(context.TODO(), userID, tt.input)
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)

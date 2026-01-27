@@ -14,6 +14,7 @@ var (
 
 type Event struct {
 	ID           uuid.UUID `db:"id"`
+	UserID       uuid.UUID `db:"user_id"`
 	Name         string    `db:"name"`
 	Location     string    `db:"location"`
 	Organization string    `db:"organization"`
@@ -25,7 +26,7 @@ type Event struct {
 }
 
 // Factory para garantir integridade
-func NewEvent(name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string) (*Event, error) {
+func NewEvent(userID uuid.UUID, name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string) (*Event, error) {
 	if name == "" || capacity <= 0 || price < 0 {
 		return nil, ErrInvalidEventData
 	}
@@ -36,6 +37,7 @@ func NewEvent(name, location, organization string, rating string, date time.Time
 
 	return &Event{
 		ID:           uuid.New(),
+		UserID:       userID,
 		Name:         name,
 		Location:     location,
 		Organization: organization,

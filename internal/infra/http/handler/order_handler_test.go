@@ -67,6 +67,14 @@ func (m *EventRepoMock) ListAll(ctx context.Context) ([]*entity.Event, error) {
 	return args.Get(0).([]*entity.Event), args.Error(1)
 }
 
+func (m *EventRepoMock) ListByUserID(ctx context.Context, userID string) ([]*entity.Event, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Event), args.Error(1)
+}
+
 type TxManagerMock struct {
 	mock.Mock
 }

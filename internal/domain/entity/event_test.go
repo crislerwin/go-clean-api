@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -101,7 +102,8 @@ func TestNewEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			event, err := NewEvent(tt.eventName, tt.location, tt.organization, tt.rating, tt.date, tt.capacity, tt.price, tt.imageURL)
+			userID := uuid.New()
+			event, err := NewEvent(userID, tt.eventName, tt.location, tt.organization, tt.rating, tt.date, tt.capacity, tt.price, tt.imageURL)
 
 			if tt.expectedErr != nil {
 				assert.ErrorIs(t, err, tt.expectedErr)

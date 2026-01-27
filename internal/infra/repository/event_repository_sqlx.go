@@ -62,8 +62,8 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 
 func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) error {
 	query := `
-	INSERT INTO events (id, name, location, organization, rating, date, capacity, price, image_url)
-	VALUES (:id, :name, :location, :organization, :rating, :date, :capacity, :price, :image_url)
+	INSERT INTO events (id, user_id, name, location, organization, rating, date, capacity, price, image_url)
+	VALUES (:id, :user_id, :name, :location, :organization, :rating, :date, :capacity, :price, :image_url)
 	`
 
 	executor := database.GetExecutor(ctx, r.db)
@@ -96,6 +96,21 @@ func (r *EventRepositorySQLx) ListAll(ctx context.Context) ([]*entity.Event, err
 	executor := database.GetExecutor(ctx, r.db)
 	var events []*entity.Event
 	err := sqlx.SelectContext(ctx, executor, &events, query)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
+}
+
+func (r *EventRepositorySQLx) ListByUserID(ctx context.Context, userID string) ([]*entity.Event, error) {
+	query := `
+		SELECT id, user_id, name, location, organization, rating, date, capacity, price, image_url
+		FROM events
+		WHERE user_id = $1
+	`
+	executor := database.GetExecutor(ctx, r.db)
+	var events []*entity.Event
+	err := sqlx.SelectContext(ctx, executor, &events, query, userID)
 	if err != nil {
 		return nil, err
 	}

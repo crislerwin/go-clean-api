@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/google/uuid"
 )
 
 var (
@@ -39,13 +40,19 @@ func NewCreateEventUseCase(eventRepo EventRepository, txManager TransactionManag
 	}
 }
 
-func (uc *CreateEventUseCase) Execute(ctx context.Context, input CreateEventInputDTO) (*CreateEventOutputDTO, error) {
+func (uc *CreateEventUseCase) Execute(ctx context.Context, userID string, input CreateEventInputDTO) (*CreateEventOutputDTO, error) {
 	parsedDate, err := time.Parse(time.RFC3339, input.Date)
 	if err != nil {
 		return nil, err
 	}
 
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, errors.New("invalid user id")
+	}
+
 	event, err := entity.NewEvent(
+		userUUID,
 		input.Name,
 		input.Location,
 		input.Organization,
