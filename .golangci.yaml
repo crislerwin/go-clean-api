@@ -37,7 +37,6 @@ linters:
         - "(?i)^\\s*@"
         - "^\\s*//\\s*@"
         - "^\\s*\\*\\s*@"
-        - "^SwaggerInfo holds exported Swagger Info so clients can modify it"
 
     errcheck:
       # Do not force-check some common function names that are safe to ignore.

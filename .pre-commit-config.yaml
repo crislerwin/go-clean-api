@@ -49,7 +49,7 @@ repos:
         language: system
         files: '\.go$'
         pass_filenames: false
-        stages: [commit]
+        stages: [push]
 
       # Optional: run go test on commit (tolerant if go is missing)
       - id: go-test
@@ -58,7 +58,7 @@ repos:
         language: system
         files: '\.go$'
         pass_filenames: false
-        stages: [commit]
+        stages: [push]
 
       # Heavy linting: golangci-lint — run on push only (CI-like), tolerant if missing
       - id: golangci-lint
