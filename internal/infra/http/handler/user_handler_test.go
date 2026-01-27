@@ -79,7 +79,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		var response map[string]string
-		json.Unmarshal(w.Body.Bytes(), &response)
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", response["name"])
 		assert.Equal(t, "john@example.com", response["email"])
 		assert.NotEmpty(t, response["id"])
@@ -169,7 +170,8 @@ func TestUserHandler_Me(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "user-123", response["id"])
 		assert.Equal(t, "John Doe", response["name"])
 		assert.Equal(t, "john@example.com", response["email"])

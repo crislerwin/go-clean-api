@@ -73,7 +73,7 @@ vet:
 
 lint:
 	@command -v $(GOLANGCI_LINT) >/dev/null 2>&1 || { echo "golangci-lint not found"; exit 1; }
-	$(GOLANGCI_LINT) run --config .golangci.yml $(APP_PATH)
+	$(GOLANGCI_LINT) run --config .golangci.yaml $(APP_PATH)
 
 test:
 	$(GO) test -v $(APP_PATH)
