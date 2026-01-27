@@ -8,37 +8,37 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createUserRequest struct {
+type signUpRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
 type UserHandler struct {
-	createUserUseCase *usecase.CreateUserUseCase
+	signUpUseCase *usecase.SignUpUseCase
 }
 
-func NewUserHandler(createUserUseCase *usecase.CreateUserUseCase) *UserHandler {
+func NewUserHandler(signUpUseCase *usecase.SignUpUseCase) *UserHandler {
 	return &UserHandler{
-		createUserUseCase: createUserUseCase,
+		signUpUseCase: signUpUseCase,
 	}
 }
 
-func (h *UserHandler) CreateUser(c *gin.Context) {
-	var req createUserRequest
+func (h *UserHandler) SignUp(c *gin.Context) {
+	var req signUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Warn("Invalid user request body", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
 		return
 	}
 
-	input := usecase.CreateUserInputDTO{
+	input := usecase.SignUpInputDTO{
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: req.Password,
 	}
 
-	output, err := h.createUserUseCase.Execute(c.Request.Context(), input)
+	output, err := h.signUpUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
 		slog.Error("Error creating user", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})

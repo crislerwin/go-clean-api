@@ -30,7 +30,7 @@ func (m *UserRepoMock) GetByEmail(ctx context.Context, email string) (*entity.Us
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
-func TestUserHandler_CreateUser(t *testing.T) {
+func TestUserHandler_SignUp(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	type testDeps struct {
@@ -40,11 +40,11 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 	setup := func() (*testDeps, *gin.Engine) {
 		userRepo := &UserRepoMock{}
-		uc := usecase.NewCreateUserUseCase(userRepo)
-		handler := NewUserHandler(uc)
+		useCase := usecase.NewSignUpUseCase(userRepo)
+		handler := NewUserHandler(useCase)
 
 		r := gin.New()
-		r.POST("/users", handler.CreateUser)
+		r.POST("/signup", handler.SignUp)
 
 		return &testDeps{
 			userRepo: userRepo,
@@ -62,7 +62,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 			"password": "password123",
 		}
 		jsonBody, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(jsonBody))
+		req, _ := http.NewRequest("POST", "/signup", bytes.NewBuffer(jsonBody))
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
@@ -86,7 +86,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 			"email": "john@example.com",
 		} // Missing name and password
 		jsonBody, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(jsonBody))
+		req, _ := http.NewRequest("POST", "/signup", bytes.NewBuffer(jsonBody))
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
@@ -104,7 +104,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 			"password": "password123",
 		}
 		jsonBody, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(jsonBody))
+		req, _ := http.NewRequest("POST", "/signup", bytes.NewBuffer(jsonBody))
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)

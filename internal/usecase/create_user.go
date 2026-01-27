@@ -6,29 +6,29 @@ import (
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 )
 
-type CreateUserInputDTO struct {
+type SignUpInputDTO struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type CreateUserOutputDTO struct {
+type SignUpOutputDTO struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
-type CreateUserUseCase struct {
+type SignUpUseCase struct {
 	UserRepository UserRepository
 }
 
-func NewCreateUserUseCase(userRepository UserRepository) *CreateUserUseCase {
-	return &CreateUserUseCase{
+func NewSignUpUseCase(userRepository UserRepository) *SignUpUseCase {
+	return &SignUpUseCase{
 		UserRepository: userRepository,
 	}
 }
 
-func (c *CreateUserUseCase) Execute(ctx context.Context, input CreateUserInputDTO) (*CreateUserOutputDTO, error) {
+func (c *SignUpUseCase) Execute(ctx context.Context, input SignUpInputDTO) (*SignUpOutputDTO, error) {
 	user, err := entity.NewUser(input.Name, input.Email, input.Password)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (c *CreateUserUseCase) Execute(ctx context.Context, input CreateUserInputDT
 		return nil, err
 	}
 
-	return &CreateUserOutputDTO{
+	return &SignUpOutputDTO{
 		ID:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
