@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -65,6 +66,10 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 
 	output, err := h.createEventUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
+		if err == entity.ErrDateInPast || err == entity.ErrInvalidEventData {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		slog.Error("Error creating event", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return

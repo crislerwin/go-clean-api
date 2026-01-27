@@ -74,6 +74,22 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 			expectedBody:   "invalid request body",
 		},
 		{
+			name: "🔴 Fail: Should return 400 when date is in past",
+			payload: map[string]any{
+				"name":         "Old Event",
+				"location":     "Rio",
+				"organization": "Org",
+				"rating":       "Livre",
+				"date":         time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+				"capacity":     100,
+				"price":        10.0,
+				"image_url":    "url",
+			},
+			setupMocks:     func(deps *testDeps) {}, // No mock needed as usecase fails before repo call
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "event date must be in the future",
+		},
+		{
 			name: "🔴 Fail: Should return 500 when repository fails",
 			payload: map[string]any{
 				"name":         "Rock in Rio",
