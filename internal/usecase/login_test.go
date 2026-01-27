@@ -23,6 +23,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			ID:       "user-123",
 			Email:    "john@example.com",
 			Password: string(hashedPassword),
+			Role:     "user",
 		}
 
 		repo.On("GetByEmail", mock.Anything, "john@example.com").Return(user, nil)

@@ -25,7 +25,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("should allow request with valid token", func(t *testing.T) {
 		r := setup()
-		token, _ := auth.GenerateToken("user-123")
+		token, _ := auth.GenerateToken("user-123", "user")
 
 		req, _ := http.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
