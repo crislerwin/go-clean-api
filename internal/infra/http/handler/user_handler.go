@@ -15,12 +15,14 @@ type SignUpRequest struct {
 }
 
 type UserHandler struct {
-	signUpUseCase *usecase.SignUpUseCase
+	signUpUseCase  *usecase.SignUpUseCase
+	getUserUseCase *usecase.GetUserUseCase
 }
 
-func NewUserHandler(signUpUseCase *usecase.SignUpUseCase) *UserHandler {
+func NewUserHandler(signUpUseCase *usecase.SignUpUseCase, getUserUseCase *usecase.GetUserUseCase) *UserHandler {
 	return &UserHandler{
-		signUpUseCase: signUpUseCase,
+		signUpUseCase:  signUpUseCase,
+		getUserUseCase: getUserUseCase,
 	}
 }
 
@@ -58,4 +60,32 @@ func (h *UserHandler) SignUp(c *gin.Context) {
 
 	slog.Info("User created successfully", "user_id", output.ID)
 	c.JSON(http.StatusCreated, output)
+}
+
+// Me godoc
+// @Summary      Get logged user info
+// @Description  Get information of the currently authenticated user
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  usecase.GetUserOutputDTO
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Security     BearerAuth
+// @Router       /me [get]
+func (h *UserHandler) Me(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	output, err := h.getUserUseCase.Execute(c.Request.Context(), userID.(string))
+	if err != nil {
+		slog.Error("Error getting logged user info", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
 }

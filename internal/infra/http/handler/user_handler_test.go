@@ -30,6 +30,14 @@ func (m *UserRepoMock) GetByEmail(ctx context.Context, email string) (*entity.Us
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
+func (m *UserRepoMock) GetByID(ctx context.Context, id string) (*entity.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
 func TestUserHandler_SignUp(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -41,7 +49,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 	setup := func() (*testDeps, *gin.Engine) {
 		userRepo := &UserRepoMock{}
 		useCase := usecase.NewSignUpUseCase(userRepo)
-		handler := NewUserHandler(useCase)
+		getUserUseCase := usecase.NewGetUserUseCase(userRepo)
+		handler := NewUserHandler(useCase, getUserUseCase)
 
 		r := gin.New()
 		r.POST("/signup", handler.SignUp)
@@ -105,6 +114,75 @@ func TestUserHandler_SignUp(t *testing.T) {
 		}
 		jsonBody, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", "/signup", bytes.NewBuffer(jsonBody))
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		deps.userRepo.AssertExpectations(t)
+		deps.userRepo.AssertExpectations(t)
+	})
+}
+
+func TestUserHandler_Me(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	type testDeps struct {
+		userRepo *UserRepoMock
+		handler  *UserHandler
+	}
+
+	setup := func() (*testDeps, *gin.Engine) {
+		userRepo := &UserRepoMock{}
+		signUpUC := usecase.NewSignUpUseCase(userRepo)
+		getUserUC := usecase.NewGetUserUseCase(userRepo)
+		handler := NewUserHandler(signUpUC, getUserUC)
+
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("userID", "user-123")
+		})
+		r.GET("/me", handler.Me)
+
+		return &testDeps{
+			userRepo: userRepo,
+			handler:  handler,
+		}, r
+	}
+
+	t.Run("should get user info successfully", func(t *testing.T) {
+		deps, r := setup()
+
+		user := &entity.User{
+			ID:    "user-123",
+			Name:  "John Doe",
+			Email: "john@example.com",
+			Role:  "user",
+		}
+		deps.userRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+
+		req, _ := http.NewRequest("GET", "/me", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, "user-123", response["id"])
+		assert.Equal(t, "John Doe", response["name"])
+		assert.Equal(t, "john@example.com", response["email"])
+
+		deps.userRepo.AssertExpectations(t)
+	})
+
+	t.Run("should return internal server error if user not found (should likely not happen with valid token)", func(t *testing.T) {
+		deps, r := setup()
+
+		deps.userRepo.On("GetByID", mock.Anything, "user-123").Return((*entity.User)(nil), errors.New("user not found"))
+
+		req, _ := http.NewRequest("GET", "/me", nil)
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)

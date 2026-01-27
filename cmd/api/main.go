@@ -76,7 +76,7 @@ func main() {
 	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
 
 	// Handler
-	userHandler := handler.NewUserHandler(signUpUseCase)
+	userHandler := handler.NewUserHandler(signUpUseCase, usecase.NewGetUserUseCase(userRepo))
 	authHandler := handler.NewAuthHandler(loginUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase)
 	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
@@ -105,6 +105,7 @@ func main() {
 	// Protected routes
 	protected := api.Group("/")
 	protected.Use(middleware.AuthMiddleware())
+	protected.GET("/me", userHandler.Me)
 	protected.POST("/orders", orderHandler.CreateOrder)
 	protected.GET("/orders", orderHandler.ListMyOrders)
 	protected.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
