@@ -34,7 +34,7 @@ func (uc *ListUserOrdersUseCase) Execute(ctx context.Context, userID string) ([]
 		return nil, err
 	}
 
-	var output []ListOrdersOutputDTO
+	output := []ListOrdersOutputDTO{}
 	for _, order := range orders {
 		var eventName string
 		var eventDate time.Time
