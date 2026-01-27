@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Reuse MockEventRepository from create_event_test.go (if in same package)
+// No changes needed if it reuses the struct from create_event_test.go
 // Since they are in the same package 'usecase' and folder, it is available.
 
 type MockOrderRepository struct {

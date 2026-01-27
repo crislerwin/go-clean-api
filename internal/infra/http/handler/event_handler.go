@@ -22,11 +22,13 @@ type CreateEventRequest struct {
 
 type EventHandler struct {
 	createEventUseCase *usecase.CreateEventUseCase
+	listEventsUseCase  *usecase.ListEventsUseCase
 }
 
-func NewEventHandler(createEventUseCase *usecase.CreateEventUseCase) *EventHandler {
+func NewEventHandler(createEventUseCase *usecase.CreateEventUseCase, listEventsUseCase *usecase.ListEventsUseCase) *EventHandler {
 	return &EventHandler{
 		createEventUseCase: createEventUseCase,
+		listEventsUseCase:  listEventsUseCase,
 	}
 }
 
@@ -77,4 +79,24 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 
 	slog.Info("Event created successfully", "event_id", output.ID, "event_name", output.Name)
 	c.JSON(http.StatusCreated, output)
+}
+
+// ListEvents godoc
+// @Summary      List all events
+// @Description  List all available events
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   usecase.ListEventsOutputDTO
+// @Failure      500  {object}  map[string]string
+// @Router       /events [get]
+func (h *EventHandler) ListEvents(c *gin.Context) {
+	output, err := h.listEventsUseCase.Execute(c.Request.Context())
+	if err != nil {
+		slog.Error("Error listing events", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
 }

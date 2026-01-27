@@ -20,6 +20,7 @@ type EventRepository interface {
 	GetSoldTicketsCount(ctx context.Context, eventID string) (int, error)
 	Create(ctx context.Context, event *entity.Event) error
 	GetByID(ctx context.Context, eventID string) (*entity.Event, error)
+	ListAll(ctx context.Context) ([]*entity.Event, error)
 }
 
 type UserRepository interface {

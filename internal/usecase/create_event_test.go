@@ -39,6 +39,14 @@ func (m *MockEventRepository) GetByID(ctx context.Context, eventID string) (*ent
 	return args.Get(0).(*entity.Event), args.Error(1)
 }
 
+func (m *MockEventRepository) ListAll(ctx context.Context) ([]*entity.Event, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Event), args.Error(1)
+}
+
 func TestCreateEventUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name          string
