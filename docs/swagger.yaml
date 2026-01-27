@@ -7,6 +7,17 @@ definitions:
       name:
         type: string
     type: object
+  github_com_crislerwin_go-clean-api_internal_usecase.GetUserOutputDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   github_com_crislerwin_go-clean-api_internal_usecase.ListOrdersOutputDTO:
     properties:
       created_at:
@@ -208,6 +219,35 @@ paths:
               type: string
             type: object
       summary: Authenticate user
+      tags:
+      - auth
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Get information of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.GetUserOutputDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get logged user info
       tags:
       - auth
   /orders:
