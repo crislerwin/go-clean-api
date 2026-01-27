@@ -25,4 +25,5 @@ type EventRepository interface {
 type UserRepository interface {
 	Save(ctx context.Context, user *entity.User) error
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
+	GetByID(ctx context.Context, id string) (*entity.User, error)
 }

@@ -31,3 +31,12 @@ func (r *UserRepositorySQLx) GetByEmail(ctx context.Context, email string) (*ent
 	}
 	return &user, nil
 }
+
+func (r *UserRepositorySQLx) GetByID(ctx context.Context, id string) (*entity.User, error) {
+	query := `SELECT id, name, email, password, role FROM users WHERE id = $1`
+	var user entity.User
+	if err := r.db.GetContext(ctx, &user, query, id); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
