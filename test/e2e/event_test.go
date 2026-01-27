@@ -132,7 +132,7 @@ func TestEventFlow(t *testing.T) {
 	})
 }
 
-// Helper function to create an admin user and return token
+// Helper function to create an admin user and return token.
 func createAdminUser(t *testing.T) string {
 	t.Helper()
 
@@ -174,7 +174,7 @@ func createAdminUser(t *testing.T) string {
 	return loginResp["access_token"].(string)
 }
 
-// Helper function to create a regular user and return token
+// Helper function to create a regular user and return token.
 func createRegularUser(t *testing.T, email string) string {
 	t.Helper()
 

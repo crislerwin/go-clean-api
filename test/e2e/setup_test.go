@@ -24,7 +24,7 @@ var (
 	testServer *gin.Engine
 )
 
-// TestMain sets up the test environment
+// TestMain sets up the test environment.
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 
@@ -49,11 +49,11 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Cleanup
-	testDB.Close()
+	_ = testDB.Close()
 	os.Exit(code)
 }
 
-// setupTestServer initializes the Gin server with all routes
+// setupTestServer initializes the Gin server with all routes.
 func setupTestServer(db *sqlx.DB) *gin.Engine {
 	r := gin.New()
 
@@ -99,7 +99,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 }
 
 // cleanupDatabase clears all test data between tests
-// This ensures test isolation while using a dedicated test database
+// This ensures test isolation while using a dedicated test database.
 func cleanupDatabase(t *testing.T) {
 	t.Helper()
 
@@ -118,7 +118,7 @@ func cleanupDatabase(t *testing.T) {
 	}
 }
 
-// makeRequest is a helper to make HTTP requests
+// makeRequest is a helper to make HTTP requests.
 func makeRequest(method, path string, body interface{}, token string) (*httptest.ResponseRecorder, error) {
 	var reqBody *bytes.Buffer
 	if body != nil {
@@ -147,7 +147,7 @@ func makeRequest(method, path string, body interface{}, token string) (*httptest
 	return w, nil
 }
 
-// parseResponse is a helper to parse JSON responses
+// parseResponse is a helper to parse JSON responses.
 func parseResponse(w *httptest.ResponseRecorder, v interface{}) error {
 	return json.Unmarshal(w.Body.Bytes(), v)
 }

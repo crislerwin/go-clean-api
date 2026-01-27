@@ -132,9 +132,10 @@ func TestRaceConditions(t *testing.T) {
 		conflictCount := 0
 
 		for _, code := range results {
-			if code == http.StatusCreated {
+			switch code {
+			case http.StatusCreated:
 				successCount++
-			} else if code == http.StatusConflict {
+			case http.StatusConflict:
 				conflictCount++
 			}
 		}
@@ -169,7 +170,7 @@ func TestRaceConditions(t *testing.T) {
 	})
 }
 
-// Helper function to create a test event and return its ID
+// Helper function to create a test event and return its ID.
 func createTestEvent(t *testing.T, adminToken string, capacity int) string {
 	t.Helper()
 
