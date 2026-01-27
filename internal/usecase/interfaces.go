@@ -12,6 +12,7 @@ type TransactionManager interface {
 
 type OrderRepository interface {
 	Save(ctx context.Context, order *entity.Order) error
+	GetByUserID(ctx context.Context, userID string) ([]*entity.Order, error)
 }
 
 type EventRepository interface {

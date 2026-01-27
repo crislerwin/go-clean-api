@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
@@ -24,9 +25,14 @@ type OrderRepoMock struct {
 	mock.Mock
 }
 
-func (m *OrderRepoMock) Save(ctx context.Context, o *entity.Order) error {
-	args := m.Called(ctx, o)
+func (m *OrderRepoMock) Save(ctx context.Context, order *entity.Order) error {
+	args := m.Called(ctx, order)
 	return args.Error(0)
+}
+
+func (m *OrderRepoMock) GetByUserID(ctx context.Context, userID string) ([]*entity.Order, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).([]*entity.Order), args.Error(1)
 }
 
 type EventRepoMock struct {
@@ -77,9 +83,9 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 		eventRepo := &EventRepoMock{}
 		txManager := &TxManagerMock{}
 		userID := uuid.New().String()
-
-		uc := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
-		handler := NewOrderHandler(uc)
+		createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
+		listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
 
 		r := gin.New()
 		r.Use(func(c *gin.Context) {
@@ -101,7 +107,8 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 	t.Run("🔴 Fail: Should return 401 when UserID is missing from context", func(t *testing.T) {
 		// Custom setup for unauthenticated case
 		uc := usecase.NewCreateOrderUseCase(nil, nil, nil)
-		handler := NewOrderHandler(uc)
+		listUc := usecase.NewListUserOrdersUseCase(nil, nil)
+		handler := NewOrderHandler(uc, listUc)
 		r := gin.New()
 		r.POST("/orders", handler.CreateOrder) // No auth middleware
 
@@ -183,5 +190,71 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 		r.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		assert.Contains(t, w.Body.String(), "event not found")
+	})
+}
+
+func TestOrderHandler_ListMyOrders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	type testDeps struct {
+		orderRepo *OrderRepoMock
+		eventRepo *EventRepoMock
+		handler   *OrderHandler
+	}
+
+	setup := func() (*testDeps, *gin.Engine, string) {
+		orderRepo := &OrderRepoMock{}
+		eventRepo := &EventRepoMock{}
+		// TxManager not needed for list
+		createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, nil)
+		listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+
+		userID := "user-123"
+
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			if userID != "" {
+				c.Set("userID", userID)
+			}
+			c.Next()
+		})
+		r.GET("/orders", handler.ListMyOrders)
+
+		return &testDeps{
+			orderRepo: orderRepo,
+			eventRepo: eventRepo,
+			handler:   handler,
+		}, r, userID
+	}
+
+	t.Run("🟢 Success: List orders", func(t *testing.T) {
+		deps, r, userID := setup()
+		eventID := uuid.New()
+		now := time.Now()
+
+		mockOrders := []*entity.Order{
+			{
+				ID:          uuid.New(),
+				EventID:     eventID,
+				UserID:      uuid.MustParse("00000000-0000-0000-0000-000000000001"), // not used here
+				TotalAmount: 50.0,
+				Quantity:    1,
+				Status:      "PENDING",
+				CreatedAt:   now,
+			},
+		}
+		mockEvent := &entity.Event{Name: "Show", Date: now}
+
+		deps.orderRepo.On("GetByUserID", mock.Anything, userID).Return(mockOrders, nil)
+		deps.eventRepo.On("GetByID", mock.Anything, eventID.String()).Return(mockEvent, nil)
+
+		req, _ := http.NewRequest("GET", "/orders", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), "Show")
+		assert.Contains(t, w.Body.String(), "50")
 	})
 }

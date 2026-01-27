@@ -11,7 +11,7 @@ GOFMT ?= gofmt
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down coverage coverage-html
+.PHONY: help all fmt imports vet lint test tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down coverage coverage-html swagger
 
 help:
 	@echo "Makefile targets:"
@@ -29,6 +29,7 @@ help:
 	@echo "  migration-new           Create a new migration file"
 	@echo "  migration-up            Run migrations up"
 	@echo "  migration-down          Run migrations down"
+	@echo "  swagger                 Generate Swagger documentation"
 	@echo "  ci                      Full pipeline (tidy, fmt, lint, vet, test)"
 
 pre-commit-install:
@@ -39,7 +40,7 @@ pre-commit-install:
 pre-commit-run:
 	$(PRE_COMMIT) run --all-files
 
-build:
+build: swagger
 	$(GO) build -o bin/server/app cmd/api/main.go
 
 run: build
@@ -47,6 +48,9 @@ run: build
 
 dev:
 	air -c .air.toml
+
+swagger:
+	swag init -g cmd/api/main.go --parseDependency --parseInternal
 
 migration-new:
 	@read -p "Enter migration name: " name; \
