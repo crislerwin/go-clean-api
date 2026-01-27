@@ -154,6 +154,8 @@ sequenceDiagram
 
 ## 🔌 API Routes
 
+**Swagger Documentation**: [http://localhost:8080/swagger](http://localhost:8080/swagger)
+
 ### Public
 
 - `POST /api/v1/signup`: Register a new user.

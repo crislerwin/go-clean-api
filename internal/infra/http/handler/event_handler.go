@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createEventRequest struct {
+type CreateEventRequest struct {
 	Name         string  `json:"name" binding:"required"`
 	Location     string  `json:"location" binding:"required"`
 	Organization string  `json:"organization" binding:"required"`
 	Rating       string  `json:"rating" binding:"required"`
-	Date         string  `json:"date" binding:"required"`
+	Date         string  `json:"date" binding:"required" example:"2025-10-10T00:00:00Z"`
 	Capacity     int     `json:"capacity" binding:"required,min=1"`
 	Price        float64 `json:"price" binding:"required,min=0"`
 	ImageURL     string  `json:"image_url" binding:"required"`
@@ -29,8 +29,22 @@ func NewEventHandler(createEventUseCase *usecase.CreateEventUseCase) *EventHandl
 	}
 }
 
+// CreateEvent godoc
+// @Summary      Create a new event
+// @Description  Create a new event (Admin only)
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        input body CreateEventRequest true "Event Data"
+// @Success      201  {object}  usecase.CreateEventOutputDTO
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /events [post]
 func (h *EventHandler) CreateEvent(c *gin.Context) {
-	var req createEventRequest
+	var req CreateEventRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Warn("Invalid request body", "error", err)

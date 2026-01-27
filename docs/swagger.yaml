@@ -1,0 +1,280 @@
+basePath: /api/v1
+definitions:
+  github_com_crislerwin_go-clean-api_internal_usecase.CreateEventOutputDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_crislerwin_go-clean-api_internal_usecase.OrderOutputDTO:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+    type: object
+  github_com_crislerwin_go-clean-api_internal_usecase.SignUpOutputDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  internal_infra_http_handler.CreateEventRequest:
+    properties:
+      capacity:
+        minimum: 1
+        type: integer
+      date:
+        type: string
+      image_url:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      rating:
+        type: string
+    required:
+    - capacity
+    - date
+    - image_url
+    - location
+    - name
+    - organization
+    - price
+    - rating
+    type: object
+  internal_infra_http_handler.CreateOrderRequest:
+    properties:
+      event_id:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - event_id
+    - quantity
+    type: object
+  internal_infra_http_handler.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_infra_http_handler.SignUpRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A robust Ticketing System API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Go Clean API
+  version: "1.0"
+paths:
+  /events:
+    post:
+      consumes:
+      - application/json
+      description: Create a new event (Admin only)
+      parameters:
+      - description: Event Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_infra_http_handler.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.CreateEventOutputDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new event
+      tags:
+      - events
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User Credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_infra_http_handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Authenticate user
+      tags:
+      - auth
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: Purchase tickets for an event
+      parameters:
+      - description: Order Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_infra_http_handler.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.OrderOutputDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Purchase tickets
+      tags:
+      - orders
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the default 'user' role
+      parameters:
+      - description: User Registration Credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_infra_http_handler.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_crislerwin_go-clean-api_internal_usecase.SignUpOutputDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
