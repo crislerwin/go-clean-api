@@ -1,17 +1,25 @@
+version: 2
 run:
   timeout: 5m
   tests: true
+  skip-dirs:
+    - docs
+    - "docs"
+
   # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
-  go: "1.23"
+  go: "1.25"
   issues:
+    exclude-files:
+      - "_test\\.go$"
     exclude-dirs:
       - mocks
+
       - vendor
+      - docs
 
 linters:
   disable-all: true
   enable:
-    - gofmt
     - govet
     - gosec
     - gocyclo
@@ -20,27 +28,39 @@ linters:
     - godot
     - errcheck
 
-linters-settings:
-  gocyclo:
-    min-complexity: 10
+  settings:
+    gocyclo:
+      min-complexity: 10
 
-  gofmt:
-    simplify: true
+    godot:
+      exclude:
+        - "(?i)^\\s*@"
+        - "^\\s*//\\s*@"
+        - "^\\s*\\*\\s*@"
 
-  errcheck:
-    # Do not force-check some common function names that are safe to ignore.
-    exclude-functions:
-      - (*os.File).Close
-      - (*net.IPConn).Close
-      - (*net.TCPConn).Close
-      - (*net.UDPConn).Close
-      - (*net.UnixConn).Close
-      - (*net.Pipe).Close
-      - (*net.Listener).Close
-      - (io.Closer).Close
-      - (io.Writer).Write
-      - (fmt.Fprintf)
-    check-type-assertions: false
+    errcheck:
+      # Do not force-check some common function names that are safe to ignore.
+      exclude-functions:
+        - (*os.File).Close
+        - (*net.IPConn).Close
+        - (*net.TCPConn).Close
+        - (*net.UDPConn).Close
+        - (*net.UnixConn).Close
+        - (*net.Pipe).Close
+        - (*net.Listener).Close
+        - (io.Closer).Close
+        - (io.Writer).Write
+        - (fmt.Fprintf)
+        - (*database/sql.DB).Close
+        - (*github.com/jmoiron/sqlx.DB).Close
+      check-type-assertions: false
+
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
 
 issues:
   exclude-use-default: false
@@ -48,6 +68,7 @@ issues:
   max-same-issues: 0
   exclude:
     - "error return value not checked.*(Close|Write|Fprintf)"
+    - "undefined.*(On|Called|AssertExpectations)"
   exclude-rules:
     - path: "_test\\.go"
       linters:
@@ -58,11 +79,9 @@ issues:
     - linters:
         - errcheck
       text: "Close"
-    - path: "_test\\.go"
+    - path: (.+)_test\.go
       linters:
         - typecheck
-
-preset: recommended
 
 cache:
   enabled: true

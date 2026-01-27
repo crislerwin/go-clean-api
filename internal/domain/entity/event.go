@@ -25,7 +25,7 @@ type Event struct {
 	Price        float64   `db:"price"`
 }
 
-// Factory para garantir integridade
+// Factory para garantir integridade.
 func NewEvent(userID uuid.UUID, name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string) (*Event, error) {
 	if name == "" || capacity <= 0 || price < 0 {
 		return nil, ErrInvalidEventData

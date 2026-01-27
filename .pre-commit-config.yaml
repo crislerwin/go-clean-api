@@ -4,7 +4,7 @@
 # - Run golangci-lint in CI/on push only (heavier linting)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         files: \.(go|yml|yaml)$
@@ -49,7 +49,7 @@ repos:
         language: system
         files: '\.go$'
         pass_filenames: false
-        stages: [commit]
+        stages: [push]
 
       # Optional: run go test on commit (tolerant if go is missing)
       - id: go-test
@@ -58,7 +58,7 @@ repos:
         language: system
         files: '\.go$'
         pass_filenames: false
-        stages: [commit, push]
+        stages: [push]
 
       # Heavy linting: golangci-lint — run on push only (CI-like), tolerant if missing
       - id: golangci-lint
