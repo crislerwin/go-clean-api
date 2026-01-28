@@ -32,7 +32,7 @@ func NewOrderFromEntity(o *entity.Order) *Order {
 		UserID:      o.UserID,
 		TotalAmount: o.TotalAmount,
 		Quantity:    o.Quantity,
-		Status:      o.Status,
+		Status:      string(o.Status),
 		CreatedAt:   o.CreatedAt,
 	}
 }
@@ -45,7 +45,7 @@ func NewTicketsFromEntity(tickets []entity.Ticket) []Ticket {
 			EventID: t.EventID,
 			OrderID: t.OrderID,
 			Price:   t.Price,
-			Status:  t.Status,
+			Status:  string(t.Status),
 		}
 	}
 	return modelTickets
@@ -58,7 +58,7 @@ func (o *Order) ToEntity() *entity.Order {
 		UserID:      o.UserID,
 		TotalAmount: o.TotalAmount,
 		Quantity:    o.Quantity,
-		Status:      o.Status,
+		Status:      entity.OrderStatus(o.Status),
 		CreatedAt:   o.CreatedAt,
 		// Note: Tickets are usually loaded separately or joined.
 		// For basic mapping, we might leave Tickets empty here if not loaded.

@@ -19,6 +19,7 @@ func TestNewOrder(t *testing.T) {
 		pricePerTicket float64
 		expectedErr    error
 		expectedTotal  float64
+		expectedStatus OrderStatus
 		expectedCount  int
 	}{
 		{
@@ -29,6 +30,18 @@ func TestNewOrder(t *testing.T) {
 			pricePerTicket: 100.0,
 			expectedErr:    nil,
 			expectedTotal:  200.0,
+			expectedStatus: OrderStatusPending,
+			expectedCount:  2,
+		},
+		{
+			name:           "should create a free order with status CONFIRMED",
+			eventID:        eventID,
+			userID:         userID,
+			quantity:       2,
+			pricePerTicket: 0.0,
+			expectedErr:    nil,
+			expectedTotal:  0.0,
+			expectedStatus: OrderStatusConfirmed,
 			expectedCount:  2,
 		},
 		{
@@ -39,6 +52,7 @@ func TestNewOrder(t *testing.T) {
 			pricePerTicket: 100.0,
 			expectedErr:    ErrInvalidQuantity,
 			expectedTotal:  0,
+			expectedStatus: "",
 			expectedCount:  0,
 		},
 		{
@@ -49,6 +63,18 @@ func TestNewOrder(t *testing.T) {
 			pricePerTicket: 100.0,
 			expectedErr:    ErrInvalidQuantity,
 			expectedTotal:  0,
+			expectedStatus: "",
+			expectedCount:  0,
+		},
+		{
+			name:           "should throw error when price is invalid (negative)",
+			eventID:        eventID,
+			userID:         userID,
+			quantity:       1,
+			pricePerTicket: -1.0,
+			expectedErr:    ErrPriceInvalid,
+			expectedTotal:  0,
+			expectedStatus: "",
 			expectedCount:  0,
 		},
 	}
@@ -64,7 +90,7 @@ func TestNewOrder(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, order)
 				assert.Equal(t, tt.expectedTotal, order.TotalAmount)
-				assert.Equal(t, "PENDING", order.Status)
+				assert.Equal(t, tt.expectedStatus, order.Status)
 				assert.Equal(t, tt.expectedCount, len(order.Tickets))
 				assert.Equal(t, tt.eventID, order.EventID)
 				assert.Equal(t, tt.userID, order.UserID)

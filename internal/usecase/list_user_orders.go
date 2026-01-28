@@ -61,7 +61,7 @@ func (uc *ListUserOrdersUseCase) Execute(ctx context.Context, userID string) ([]
 			EventDate:   eventDate,
 			Quantity:    order.Quantity,
 			TotalAmount: order.TotalAmount,
-			Status:      order.Status,
+			Status:      string(order.Status),
 			CreatedAt:   order.CreatedAt,
 		})
 	}

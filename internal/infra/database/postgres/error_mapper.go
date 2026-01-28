@@ -8,6 +8,11 @@ import (
 	"github.com/lib/pq"
 )
 
+var (
+	ErrUserNotFound     = errors.New("user not found")
+	ForeignKeyViolation = errors.New("conflict: foreign key violation")
+)
+
 func TranslateError(err error) error {
 	var pqErr *pq.Error
 
@@ -27,11 +32,11 @@ func TranslateError(err error) error {
 func mapForeignKeyError(err *pq.Error) error {
 	switch err.Constraint {
 	case "orders_user_id_fkey":
-		return usecase.ErrUserNotFound
+		return ErrUserNotFound
 	case "orders_event_id_fkey":
 		return usecase.ErrEventNotFound
 	default:
-		return errors.New("conflict: foreign key violation")
+		return ForeignKeyViolation
 	}
 
 }
