@@ -102,12 +102,24 @@ Key design decisions:
 - **`make test-e2e`**: Full flow verification (requires DB).
 - **`make ci`**: Full validation pipeline.
 
-### 4. Commands Recap
+### 4. Database Migrations
 
-| Command          | Purpose                    |
-| ---------------- | -------------------------- |
-| `make dev`       | Start dev server with HMR. |
-| `make test-unit` | Run unit tests only.       |
-| `make test-e2e`  | Run e2e tests.             |
-| `make ci`        | Run full pipeline.         |
-| `make lint`      | Run linters.               |
+**IMPORTANT**: Never create migration files manually. Always use goose via Makefile.
+
+- **`make migration-new`**: Create a new migration file (will prompt for name).
+- **`make migration-up`**: Apply pending migrations to development database.
+- **`make migration-down`**: Rollback last migration.
+- **`make migration-test-up`**: Apply migrations to test database.
+
+### 5. Commands Recap
+
+| Command               | Purpose                         |
+| --------------------- | ------------------------------- |
+| `make dev`            | Start dev server with HMR.      |
+| `make test-unit`      | Run unit tests only.            |
+| `make test-e2e`       | Run e2e tests.                  |
+| `make ci`             | Run full pipeline.              |
+| `make lint`           | Run linters.                    |
+| `make migration-new`  | Create new migration (prompts). |
+| `make migration-up`   | Apply pending migrations.       |
+| `make migration-down` | Rollback last migration.        |
