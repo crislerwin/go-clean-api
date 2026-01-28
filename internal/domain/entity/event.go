@@ -10,19 +10,20 @@ import (
 var (
 	ErrInvalidEventData = errors.New("invalid event data")
 	ErrDateInPast       = errors.New("event date must be in the future")
+	ErrEventSoldOut     = errors.New("event sold out")
 )
 
 type Event struct {
-	ID           uuid.UUID `db:"id"`
-	UserID       uuid.UUID `db:"user_id"`
-	Name         string    `db:"name"`
-	Location     string    `db:"location"`
-	Organization string    `db:"organization"`
-	Rating       string    `db:"rating"` // "Livre", "18+", etc
-	Date         time.Time `db:"date"`
-	ImageURL     string    `db:"image_url"`
-	Capacity     int       `db:"capacity"`
-	Price        float64   `db:"price"`
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	Name         string
+	Location     string
+	Organization string
+	Rating       string // "Livre", "18+", etc
+	Date         time.Time
+	ImageURL     string
+	Capacity     int
+	Price        float64
 }
 
 // Factory para garantir integridade.
@@ -47,4 +48,11 @@ func NewEvent(userID uuid.UUID, name, location, organization string, rating stri
 		Price:        price,
 		ImageURL:     imageURL,
 	}, nil
+}
+
+func (e *Event) CanSell(quantity int, soldTickets int) error {
+	if (soldTickets + quantity) > e.Capacity {
+		return ErrEventSoldOut
+	}
+	return nil
 }
