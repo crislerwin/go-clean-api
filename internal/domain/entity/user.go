@@ -15,18 +15,25 @@ type User struct {
 	Role     string
 }
 
+var (
+	ErrNameRequired     = errors.New("name is required")
+	ErrEmailRequired    = errors.New("email is required")
+	ErrPasswordRequired = errors.New("password is required")
+	ErrPasswordTooShort = errors.New("password must be at least 6 characters")
+)
+
 func NewUser(name, email, password string) (*User, error) {
 	if name == "" {
-		return nil, errors.New("name is required")
+		return nil, ErrNameRequired
 	}
 	if email == "" {
-		return nil, errors.New("email is required")
+		return nil, ErrEmailRequired
 	}
 	if password == "" {
-		return nil, errors.New("password is required")
+		return nil, ErrPasswordRequired
 	}
 	if len(password) < 6 {
-		return nil, errors.New("password must be at least 6 characters")
+		return nil, ErrPasswordTooShort
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
