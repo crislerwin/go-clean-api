@@ -24,10 +24,11 @@ type Event struct {
 	ImageURL     string
 	Capacity     int
 	Price        float64
+	Description  string
 }
 
 // Factory para garantir integridade.
-func NewEvent(userID uuid.UUID, name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string) (*Event, error) {
+func NewEvent(userID uuid.UUID, name, location, organization string, rating string, date time.Time, capacity int, price float64, imageURL string, description string) (*Event, error) {
 	if name == "" || capacity <= 0 || price < 0 {
 		return nil, ErrInvalidEventData
 	}
@@ -47,6 +48,7 @@ func NewEvent(userID uuid.UUID, name, location, organization string, rating stri
 		Capacity:     capacity,
 		Price:        price,
 		ImageURL:     imageURL,
+		Description:  description,
 	}, nil
 }
 
