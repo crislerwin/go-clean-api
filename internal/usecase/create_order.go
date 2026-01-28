@@ -87,7 +87,7 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 	}
 	return &OrderOutputDTO{
 		ID:          order.ID.String(),
-		Status:      order.Status,
+		Status:      string(order.Status),
 		TotalAmount: order.TotalAmount,
 		CreatedAt:   order.CreatedAt,
 	}, nil

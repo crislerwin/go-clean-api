@@ -70,7 +70,7 @@ jobs:
         run: go mod download
 
       - name: Run unit tests
-        run: go test -v -race -coverprofile=coverage.out ./internal/...
+        run: go test -v -race -coverprofile=coverage.out $(go list ./... | grep -v /test/e2e)
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

@@ -21,7 +21,7 @@ help:
 	@echo "  fmt                     Run gofmt on $(APP_PATH)"
 	@echo "  vet                     Run go vet on $(APP_PATH)"
 	@echo "  lint                    Run golangci-lint using .golangci.yml"
-	@echo "  test                    Run unit tests"
+	@echo "  test-unit               Run unit tests (skips e2e)"
 	@echo "  test-e2e                Run end-to-end tests (requires test database)"
 	@echo "  test-all                Run all tests (unit + e2e)"
 	@echo "  coverage                Run tests and show coverage"
@@ -83,14 +83,14 @@ lint:
 	@command -v $(GOLANGCI_LINT) >/dev/null 2>&1 || { echo "golangci-lint not found"; exit 1; }
 	$(GOLANGCI_LINT) run --config .golangci.yaml $(APP_PATH)
 
-test:
-	$(GO) test -v $(APP_PATH)
+test-unit:
+	$(GO) test -v $(shell go list ./... | grep -v /test/e2e)
 
 test-e2e:
 	@echo "Running e2e tests with test database..."
 	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" $(GO) test -v ./test/e2e/...
 
-test-all: test test-e2e
+test-all: test-unit test-e2e
 
 coverage:
 	$(GO) test -coverprofile=coverage.out $(APP_PATH)
@@ -99,6 +99,6 @@ coverage:
 coverage-html: coverage
 	$(GO) tool cover -html=coverage.out
 
-check: lint vet test
+check: lint vet test-unit
 
-ci: tidy fmt lint vet test
+ci: tidy fmt lint vet test-unit
