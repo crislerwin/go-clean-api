@@ -2,13 +2,15 @@ package usecase
 
 import (
 	"context"
+
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
 
 type ListUserEventsUseCase struct {
-	eventRepo EventRepository
+	eventRepo repository.EventRepository
 }
 
-func NewListUserEventsUseCase(eventRepo EventRepository) *ListUserEventsUseCase {
+func NewListUserEventsUseCase(eventRepo repository.EventRepository) *ListUserEventsUseCase {
 	return &ListUserEventsUseCase{
 		eventRepo: eventRepo,
 	}

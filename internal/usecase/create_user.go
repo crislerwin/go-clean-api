@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
 
 type SignUpInputDTO struct {
@@ -19,12 +20,12 @@ type SignUpOutputDTO struct {
 }
 
 type SignUpUseCase struct {
-	UserRepository UserRepository
+	userRepo repository.UserRepository
 }
 
-func NewSignUpUseCase(userRepository UserRepository) *SignUpUseCase {
+func NewSignUpUseCase(userRepo repository.UserRepository) *SignUpUseCase {
 	return &SignUpUseCase{
-		UserRepository: userRepository,
+		userRepo: userRepo,
 	}
 }
 
@@ -34,7 +35,7 @@ func (c *SignUpUseCase) Execute(ctx context.Context, input SignUpInputDTO) (*Sig
 		return nil, err
 	}
 
-	if err := c.UserRepository.Save(ctx, user); err != nil {
+	if err := c.userRepo.Save(ctx, user); err != nil {
 		return nil, err
 	}
 

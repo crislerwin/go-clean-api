@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"time"
+
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
 
 type ListOrdersOutputDTO struct {
@@ -17,11 +19,11 @@ type ListOrdersOutputDTO struct {
 }
 
 type ListUserOrdersUseCase struct {
-	orderRepo OrderRepository
-	eventRepo EventRepository
+	orderRepo repository.OrderRepository
+	eventRepo repository.EventRepository
 }
 
-func NewListUserOrdersUseCase(orderRepo OrderRepository, eventRepo EventRepository) *ListUserOrdersUseCase {
+func NewListUserOrdersUseCase(orderRepo repository.OrderRepository, eventRepo repository.EventRepository) *ListUserOrdersUseCase {
 	return &ListUserOrdersUseCase{
 		orderRepo: orderRepo,
 		eventRepo: eventRepo,

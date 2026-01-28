@@ -3,6 +3,7 @@ package postgres
 import (
 	"errors"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/lib/pq"
 )
@@ -15,7 +16,7 @@ func TranslateError(err error) error {
 		case "23503":
 			return mapForeignKeyError(pqErr)
 		case "23505":
-			return usecase.ErrEventSoldOut
+			return entity.ErrEventSoldOut
 		}
 
 	}

@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 	"github.com/google/uuid"
 )
 
 var (
 	ErrEventNotFound = errors.New("event not found")
-	ErrEventSoldOut  = errors.New("event sold out")
 )
 
 type CreateEventInputDTO struct {
@@ -31,10 +31,10 @@ type CreateEventOutputDTO struct {
 }
 
 type CreateEventUseCase struct {
-	eventRepo EventRepository
+	eventRepo repository.EventRepository
 }
 
-func NewCreateEventUseCase(eventRepo EventRepository, txManager TransactionManager) *CreateEventUseCase {
+func NewCreateEventUseCase(eventRepo repository.EventRepository, txManager TransactionManager) *CreateEventUseCase {
 	return &CreateEventUseCase{
 		eventRepo: eventRepo,
 	}

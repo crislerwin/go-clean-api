@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
 
 type GetUserOutputDTO struct {
@@ -12,10 +14,10 @@ type GetUserOutputDTO struct {
 }
 
 type GetUserUseCase struct {
-	UserRepository UserRepository
+	UserRepository repository.UserRepository
 }
 
-func NewGetUserUseCase(userRepository UserRepository) *GetUserUseCase {
+func NewGetUserUseCase(userRepository repository.UserRepository) *GetUserUseCase {
 	return &GetUserUseCase{
 		UserRepository: userRepository,
 	}
