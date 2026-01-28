@@ -7,11 +7,8 @@ import (
 	"strings"
 
 	_ "github.com/crislerwin/go-clean-api/docs" // Swagger docs
-	"github.com/crislerwin/go-clean-api/internal/infra/database"
-	"github.com/crislerwin/go-clean-api/internal/infra/http/handler"
+	"github.com/crislerwin/go-clean-api/internal/di"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/middleware"
-	"github.com/crislerwin/go-clean-api/internal/infra/repository"
-	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib" // Standard library bindings for pgx
 	"github.com/jmoiron/sqlx"
@@ -62,26 +59,7 @@ func main() {
 
 	defer db.Close()
 
-	txManager := database.NewTransactionManager(db)
-	eventRepo := repository.NewEventRepositorySqlx(db)
-	userRepo := repository.NewUserRepositorySQLx(db)
-
-	orderRepo := repository.NewOrderRepositorySQLx(db)
-
-	// UseCase
-	signUpUseCase := usecase.NewSignUpUseCase(userRepo)
-	loginUseCase := usecase.NewLoginUseCase(userRepo)
-	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
-	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
-	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
-	listEventsUseCase := usecase.NewListEventsUseCase(eventRepo)
-	listUserEventsUseCase := usecase.NewListUserEventsUseCase(eventRepo)
-
-	// Handler
-	userHandler := handler.NewUserHandler(signUpUseCase, usecase.NewGetUserUseCase(userRepo))
-	authHandler := handler.NewAuthHandler(loginUseCase)
-	eventHandler := handler.NewEventHandler(createEventUseCase, listEventsUseCase, listUserEventsUseCase)
-	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+	container := di.NewContainer(db)
 
 	// Router
 	r := gin.Default()
@@ -101,18 +79,18 @@ func main() {
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Public routes
-	api.POST("/signup", userHandler.SignUp)
-	api.POST("/login", authHandler.Login)
-	api.GET("/events", eventHandler.ListEvents)
+	api.POST("/signup", container.UserHandler.SignUp)
+	api.POST("/login", container.AuthHandler.Login)
+	api.GET("/events", container.EventHandler.ListEvents)
 
 	// Protected routes
 	protected := api.Group("/")
 	protected.Use(middleware.AuthMiddleware())
-	protected.GET("/me", userHandler.Me)
-	protected.GET("/me/events", eventHandler.ListMyEvents)
-	protected.POST("/orders", orderHandler.CreateOrder)
-	protected.GET("/orders", orderHandler.ListMyOrders)
-	protected.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
+	protected.GET("/me", container.UserHandler.Me)
+	protected.GET("/me/events", container.EventHandler.ListMyEvents)
+	protected.POST("/orders", container.OrderHandler.CreateOrder)
+	protected.GET("/orders", container.OrderHandler.ListMyOrders)
+	protected.POST("/events", middleware.RoleMiddleware("admin"), container.EventHandler.CreateEvent)
 
 	slog.Info("Server started on :8080")
 	if err := r.Run(":8080"); err != nil {
