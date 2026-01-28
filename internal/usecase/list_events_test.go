@@ -60,7 +60,7 @@ func TestListEventsUseCase_Execute(t *testing.T) {
 		repo := new(EventListRepoMock)
 		useCase := NewListEventsUseCase(repo)
 
-		event, _ := entity.NewEvent(uuid.New(), "Event 1", "Location", "Org", "Livre", time.Now().Add(time.Hour), 100, 10.0, "img")
+		event, _ := entity.NewEvent(uuid.New(), "Event 1", "Location", "Org", "Livre", time.Now().Add(time.Hour), 100, 10.0, "img", "Test description")
 		events := []*entity.Event{event}
 
 		repo.On("ListAll", mock.Anything).Return(events, nil)
