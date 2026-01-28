@@ -18,6 +18,7 @@ type CreateEventRequest struct {
 	Capacity     int     `json:"capacity" binding:"required,min=1"`
 	Price        float64 `json:"price" binding:"required,min=0"`
 	ImageURL     string  `json:"image_url" binding:"required"`
+	Description  string  `json:"description"`
 }
 
 type EventHandler struct {
@@ -70,6 +71,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 		Capacity:     req.Capacity,
 		Price:        req.Price,
 		ImageURL:     req.ImageURL,
+		Description:  req.Description,
 	}
 
 	userID, exists := c.Get("userID")

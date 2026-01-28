@@ -86,6 +86,8 @@ definitions:
       date:
         example: "2025-10-10T00:00:00Z"
         type: string
+      description:
+        type: string
       image_url:
         type: string
       location:
