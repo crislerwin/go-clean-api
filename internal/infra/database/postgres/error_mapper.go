@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrUserNotFound     = errors.New("user not found")
-	ForeignKeyViolation = errors.New("conflict: foreign key violation")
+	ErrUserNotFoundErr     = errors.New("user not found")
+	ErrForeignKeyViolation = errors.New("conflict: foreign key violation")
 )
 
 func TranslateError(err error) error {
@@ -32,11 +32,11 @@ func TranslateError(err error) error {
 func mapForeignKeyError(err *pq.Error) error {
 	switch err.Constraint {
 	case "orders_user_id_fkey":
-		return ErrUserNotFound
+		return ErrUserNotFoundErr
 	case "orders_event_id_fkey":
 		return usecase.ErrEventNotFound
 	default:
-		return ForeignKeyViolation
+		return ErrForeignKeyViolation
 	}
 
 }
