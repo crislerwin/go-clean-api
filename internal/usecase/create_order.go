@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 
 	"github.com/google/uuid"
 )
@@ -23,14 +24,14 @@ type OrderOutputDTO struct {
 }
 
 type CreateOrderUseCase struct {
-	orderRepo OrderRepository
-	eventRepo EventRepository
+	orderRepo repository.OrderRepository
+	eventRepo repository.EventRepository
 	txManager TransactionManager
 }
 
 func NewCreateOrderUseCase(
-	orderRepo OrderRepository,
-	eventRepo EventRepository,
+	orderRepo repository.OrderRepository,
+	eventRepo repository.EventRepository,
 	txManager TransactionManager,
 ) *CreateOrderUseCase {
 	return &CreateOrderUseCase{
@@ -65,8 +66,8 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, input OrderInputDTO) 
 			return err
 		}
 
-		if (sold + input.Quantity) > event.Capacity {
-			return ErrEventSoldOut
+		if err := event.CanSell(input.Quantity, sold); err != nil {
+			return err
 		}
 
 		// Create the order

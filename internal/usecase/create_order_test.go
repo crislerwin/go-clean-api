@@ -91,7 +91,7 @@ func TestCreateOrderUseCase_Execute(t *testing.T) {
 				}, nil)
 				eventRepo.On("GetSoldTicketsCount", mock.Anything, eventID.String()).Return(5, nil)
 			},
-			expectedError: ErrEventSoldOut,
+			expectedError: entity.ErrEventSoldOut,
 		},
 		{
 			name: "Invalid Quantity",

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/repository"
+
 	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,10 +20,10 @@ type LoginOutputDTO struct {
 }
 
 type LoginUseCase struct {
-	UserRepository UserRepository
+	UserRepository repository.UserRepository
 }
 
-func NewLoginUseCase(userRepository UserRepository) *LoginUseCase {
+func NewLoginUseCase(userRepository repository.UserRepository) *LoginUseCase {
 	return &LoginUseCase{
 		UserRepository: userRepository,
 	}

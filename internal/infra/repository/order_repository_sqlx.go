@@ -6,6 +6,7 @@ import (
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
+	"github.com/crislerwin/go-clean-api/internal/infra/repository/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -28,7 +29,8 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 		VALUES (:id, :event_id, :order_id, :price, :status)
 		`
 
-	_, err := sqlx.NamedExecContext(ctx, executor, orderQuery, order)
+	orderModel := model.NewOrderFromEntity(order)
+	_, err := sqlx.NamedExecContext(ctx, executor, orderQuery, orderModel)
 	if err != nil {
 		return postgres.TranslateError(err)
 	}
@@ -36,8 +38,9 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 	for i := range order.Tickets {
 		order.Tickets[i].OrderID = order.ID
 	}
+	ticketsModel := model.NewTicketsFromEntity(order.Tickets)
 
-	_, err = sqlx.NamedExecContext(ctx, executor, ticketQuery, order.Tickets)
+	_, err = sqlx.NamedExecContext(ctx, executor, ticketQuery, ticketsModel)
 	if err != nil {
 		return err
 	}
@@ -53,10 +56,15 @@ func (r *OrderRepositorySQLx) GetByUserID(ctx context.Context, userID string) ([
 		ORDER BY created_at DESC
 	`
 
-	var orders []*entity.Order
-	err := r.db.SelectContext(ctx, &orders, query, userID)
+	var orderModels []*model.Order
+	err := r.db.SelectContext(ctx, &orderModels, query, userID)
 	if err != nil {
 		return nil, postgres.TranslateError(err)
+	}
+
+	var orders []*entity.Order
+	for _, om := range orderModels {
+		orders = append(orders, om.ToEntity())
 	}
 
 	return orders, nil

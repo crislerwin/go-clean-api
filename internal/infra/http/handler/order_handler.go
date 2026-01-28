@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -64,7 +65,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	output, err := h.createOrderUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
 		switch err {
-		case usecase.ErrEventSoldOut:
+		case entity.ErrEventSoldOut:
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		case usecase.ErrEventNotFound:
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

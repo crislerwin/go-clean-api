@@ -5,6 +5,7 @@ import (
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
+	"github.com/crislerwin/go-clean-api/internal/infra/repository/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -65,17 +66,15 @@ func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) e
 	INSERT INTO events (id, user_id, name, location, organization, rating, date, capacity, price, image_url)
 	VALUES (:id, :user_id, :name, :location, :organization, :rating, :date, :capacity, :price, :image_url)
 	`
-
 	executor := database.GetExecutor(ctx, r.db)
-
-	_, err := sqlx.NamedExecContext(ctx, executor, query, event)
-
+	eventModel := model.NewEventFromEntity(event)
+	_, err := sqlx.NamedExecContext(ctx, executor, query, eventModel)
 	return err
 }
 
 func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string, forUpdate bool) (*entity.Event, error) {
 	query := `
-		SELECT id, name, location, organization, rating, date, capacity, price, image_url
+		SELECT id, user_id, name, location, organization, rating, date, capacity, price, image_url
 		FROM events
 		WHERE id = $1
 	`
@@ -84,24 +83,29 @@ func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string, forUp
 	}
 
 	executor := database.GetExecutor(ctx, r.db)
-	var event entity.Event
-	err := sqlx.GetContext(ctx, executor, &event, query, eventID)
+	var eventModel model.Event
+	err := sqlx.GetContext(ctx, executor, &eventModel, query, eventID)
 	if err != nil {
 		return nil, err
 	}
-	return &event, nil
+	return eventModel.ToEntity(), nil
 }
 
 func (r *EventRepositorySQLx) ListAll(ctx context.Context) ([]*entity.Event, error) {
 	query := `
-		SELECT id, name, location, organization, rating, date, capacity, price, image_url
+		SELECT id, user_id, name, location, organization, rating, date, capacity, price, image_url
 		FROM events
 	`
 	executor := database.GetExecutor(ctx, r.db)
-	var events []*entity.Event
-	err := sqlx.SelectContext(ctx, executor, &events, query)
+	var eventModels []*model.Event
+	err := sqlx.SelectContext(ctx, executor, &eventModels, query)
 	if err != nil {
 		return nil, err
+	}
+
+	var events []*entity.Event
+	for _, em := range eventModels {
+		events = append(events, em.ToEntity())
 	}
 	return events, nil
 }
@@ -113,10 +117,15 @@ func (r *EventRepositorySQLx) ListByUserID(ctx context.Context, userID string) (
 		WHERE user_id = $1
 	`
 	executor := database.GetExecutor(ctx, r.db)
-	var events []*entity.Event
-	err := sqlx.SelectContext(ctx, executor, &events, query, userID)
+	var eventModels []*model.Event
+	err := sqlx.SelectContext(ctx, executor, &eventModels, query, userID)
 	if err != nil {
 		return nil, err
+	}
+
+	var events []*entity.Event
+	for _, em := range eventModels {
+		events = append(events, em.ToEntity())
 	}
 	return events, nil
 }
