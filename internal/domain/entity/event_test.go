@@ -22,6 +22,7 @@ func TestNewEvent(t *testing.T) {
 		capacity     int
 		price        float64
 		imageURL     string
+		description  string
 		expectedErr  error
 	}{
 		{
@@ -34,6 +35,7 @@ func TestNewEvent(t *testing.T) {
 			capacity:     100000,
 			price:        100.0,
 			imageURL:     "http://example.com/image.jpg",
+			description:  "The biggest rock festival in the world",
 			expectedErr:  nil,
 		},
 		{
@@ -46,6 +48,7 @@ func TestNewEvent(t *testing.T) {
 			capacity:     100000,
 			price:        100.0,
 			imageURL:     "http://example.com/image.jpg",
+			description:  "Test description",
 			expectedErr:  ErrInvalidEventData,
 		},
 		{
@@ -58,8 +61,8 @@ func TestNewEvent(t *testing.T) {
 			capacity:     0,
 			price:        100.0,
 			imageURL:     "http://example.com/image.jpg",
-
-			expectedErr: ErrInvalidEventData,
+			description:  "Test description",
+			expectedErr:  ErrInvalidEventData,
 		},
 		{
 			name:         "should return error when capacity is negative",
@@ -71,8 +74,8 @@ func TestNewEvent(t *testing.T) {
 			capacity:     -1,
 			price:        100.0,
 			imageURL:     "http://example.com/image.jpg",
-
-			expectedErr: ErrInvalidEventData,
+			description:  "Test description",
+			expectedErr:  ErrInvalidEventData,
 		},
 		{
 			name:         "should return error when price is negative",
@@ -84,6 +87,7 @@ func TestNewEvent(t *testing.T) {
 			capacity:     100000,
 			price:        -10.0,
 			imageURL:     "http://example.com/image.jpg",
+			description:  "Test description",
 			expectedErr:  ErrInvalidEventData,
 		},
 		{
@@ -96,6 +100,7 @@ func TestNewEvent(t *testing.T) {
 			capacity:     100000,
 			price:        100.0,
 			imageURL:     "http://example.com/image.jpg",
+			description:  "Test description",
 			expectedErr:  ErrDateInPast,
 		},
 	}
@@ -103,7 +108,7 @@ func TestNewEvent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			userID := uuid.New()
-			event, err := NewEvent(userID, tt.eventName, tt.location, tt.organization, tt.rating, tt.date, tt.capacity, tt.price, tt.imageURL)
+			event, err := NewEvent(userID, tt.eventName, tt.location, tt.organization, tt.rating, tt.date, tt.capacity, tt.price, tt.imageURL, tt.description)
 
 			if tt.expectedErr != nil {
 				assert.ErrorIs(t, err, tt.expectedErr)
@@ -119,6 +124,7 @@ func TestNewEvent(t *testing.T) {
 				assert.Equal(t, tt.capacity, event.Capacity)
 				assert.Equal(t, tt.price, event.Price)
 				assert.Equal(t, tt.imageURL, event.ImageURL)
+				assert.Equal(t, tt.description, event.Description)
 				assert.NotEmpty(t, event.ID)
 			}
 		})

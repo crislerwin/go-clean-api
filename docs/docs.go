@@ -599,6 +599,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-10-10T00:00:00Z"
                 },
+                "description": {
+                    "type": "string"
+                },
                 "image_url": {
                     "type": "string"
                 },

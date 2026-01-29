@@ -34,7 +34,7 @@ repos:
         pass_filenames: false
         stages: [commit]
 
-      # Static checks: go vet — run on commit for entire repo, tolerant if missing
+      # Static checks: go vet — run on push (so partial commits don't fail)
       - id: go-vet
         name: go vet
         entry: bash -lc "if command -v go >/dev/null 2>&1; then go vet ./... || (echo 'go vet failed' && exit 1); else echo 'go not installed, skipping go vet'; fi"

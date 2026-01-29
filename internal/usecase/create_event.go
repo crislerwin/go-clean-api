@@ -23,6 +23,7 @@ type CreateEventInputDTO struct {
 	Capacity     int     `json:"capacity"`
 	Price        float64 `json:"price"`
 	ImageURL     string  `json:"image_url"`
+	Description  string  `json:"description"`
 }
 
 type CreateEventOutputDTO struct {
@@ -61,6 +62,7 @@ func (uc *CreateEventUseCase) Execute(ctx context.Context, userID string, input 
 		input.Capacity,
 		input.Price,
 		input.ImageURL,
+		input.Description,
 	)
 	if err != nil {
 		return nil, err

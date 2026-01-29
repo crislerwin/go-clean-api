@@ -18,9 +18,14 @@ type Event struct {
 	ImageURL     string    `db:"image_url"`
 	Capacity     int       `db:"capacity"`
 	Price        float64   `db:"price"`
+	Description  *string   `db:"description"`
 }
 
 func NewEventFromEntity(e *entity.Event) *Event {
+	var desc *string
+	if e.Description != "" {
+		desc = &e.Description
+	}
 	return &Event{
 		ID:           e.ID,
 		UserID:       e.UserID,
@@ -32,10 +37,15 @@ func NewEventFromEntity(e *entity.Event) *Event {
 		ImageURL:     e.ImageURL,
 		Capacity:     e.Capacity,
 		Price:        e.Price,
+		Description:  desc,
 	}
 }
 
 func (e *Event) ToEntity() *entity.Event {
+	desc := ""
+	if e.Description != nil {
+		desc = *e.Description
+	}
 	return &entity.Event{
 		ID:           e.ID,
 		UserID:       e.UserID,
@@ -47,5 +57,6 @@ func (e *Event) ToEntity() *entity.Event {
 		ImageURL:     e.ImageURL,
 		Capacity:     e.Capacity,
 		Price:        e.Price,
+		Description:  desc,
 	}
 }
