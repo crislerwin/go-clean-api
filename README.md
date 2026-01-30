@@ -212,6 +212,5 @@ These routes require authentication AND the `admin` role:
 - [ ] Add edit event endpoint
 - [ ] Add event description field
 - [ ] Add soft delete event endpoint
-- [ ] Add change order status webhook endpoint for payment gateway
 - [ ] Add event image upload endpoint // using cloud storage
 - [ ] Add event check-in endpoint // using ticket id
