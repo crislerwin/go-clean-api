@@ -101,6 +101,17 @@ func TestOrderFlow(t *testing.T) {
 		}
 	})
 
+	t.Run("Update Order Status - Not Found (Webhook)", func(t *testing.T) {
+		payload := map[string]any{
+			"status": "PAID",
+		}
+		// Using a random UUID that likely doesn't exist
+		nonExistentID := "00000000-0000-0000-0000-000000000000"
+		w, err := makeRequest("POST", fmt.Sprintf("/api/v1/orders/%s/status", nonExistentID), payload, "")
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
 	t.Run("List My Orders", func(t *testing.T) {
 		w, err := makeRequest("GET", "/api/v1/orders", nil, userToken)
 		require.NoError(t, err)

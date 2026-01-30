@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -110,9 +109,9 @@ func TestUpdateOrderStatusUseCase_Execute(t *testing.T) {
 				Status:  "PAID",
 			},
 			setupMocks: func(repo *MockOrderRepositoryUpdate) {
-				repo.On("GetByID", mock.Anything, orderID.String()).Return(nil, errors.New("not found"))
+				repo.On("GetByID", mock.Anything, orderID.String()).Return(nil, ErrOrderNotFound)
 			},
-			expectedError: errors.New("not found"),
+			expectedError: ErrOrderNotFound,
 		},
 	}
 

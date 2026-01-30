@@ -2,10 +2,13 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
+
+var ErrOrderNotFound = errors.New("order not found")
 
 type UpdateOrderStatusInputDTO struct {
 	OrderID string

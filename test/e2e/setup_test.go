@@ -36,6 +36,9 @@ func TestMain(m *testing.M) {
 		testDBURL = "postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable"
 	}
 
+	// Set webhook secret for tests
+	os.Setenv("WEBHOOK_SECRET", "test-webhook-secret")
+
 	var err error
 	testDB, err = sqlx.Connect("pgx", testDBURL)
 	if err != nil {
@@ -142,6 +145,9 @@ func makeRequest(method, path string, body interface{}, token string) (*httptest
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
+
+	// Always send webhook secret in tests to pass auth
+	req.Header.Set("X-Webhook-Secret", "test-webhook-secret")
 
 	w := httptest.NewRecorder()
 	testServer.ServeHTTP(w, req)

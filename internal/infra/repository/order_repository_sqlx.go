@@ -2,11 +2,14 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
 	"github.com/crislerwin/go-clean-api/internal/infra/repository/model"
+	"github.com/crislerwin/go-clean-api/internal/usecase"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -87,6 +90,9 @@ func (r *OrderRepositorySQLx) GetByID(ctx context.Context, id string) (*entity.O
 	var orderModel model.Order
 	err := sqlx.GetContext(ctx, executor, &orderModel, queryOrder, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, usecase.ErrOrderNotFound
+		}
 		return nil, postgres.TranslateError(err)
 	}
 
