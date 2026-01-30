@@ -9,6 +9,8 @@ import (
 type OrderRepository interface {
 	Save(ctx context.Context, order *entity.Order) error
 	GetByUserID(ctx context.Context, userID string) ([]*entity.Order, error)
+	GetByID(ctx context.Context, id string) (*entity.Order, error)
+	Update(ctx context.Context, order *entity.Order) error
 }
 
 type EventRepository interface {

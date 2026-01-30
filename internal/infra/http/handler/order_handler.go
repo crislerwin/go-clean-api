@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/auth"
@@ -16,15 +18,77 @@ type CreateOrderRequest struct {
 }
 
 type OrderHandler struct {
-	createOrderUseCase    *usecase.CreateOrderUseCase
-	listUserOrdersUseCase *usecase.ListUserOrdersUseCase
+	createOrderUseCase       *usecase.CreateOrderUseCase
+	listUserOrdersUseCase    *usecase.ListUserOrdersUseCase
+	updateOrderStatusUseCase *usecase.UpdateOrderStatusUseCase
 }
 
-func NewOrderHandler(create *usecase.CreateOrderUseCase, list *usecase.ListUserOrdersUseCase) *OrderHandler {
+func NewOrderHandler(create *usecase.CreateOrderUseCase, list *usecase.ListUserOrdersUseCase, update *usecase.UpdateOrderStatusUseCase) *OrderHandler {
 	return &OrderHandler{
-		createOrderUseCase:    create,
-		listUserOrdersUseCase: list,
+		createOrderUseCase:       create,
+		listUserOrdersUseCase:    list,
+		updateOrderStatusUseCase: update,
 	}
+}
+
+type UpdateOrderStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=PAID REJECTED"`
+	Reason string `json:"reason"`
+}
+
+// UpdateStatus godoc
+// @Summary      Update order status (Webhook)
+// @Description  Update order status (e.g. from payment gateway)
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string                    true "Order ID"
+// @Param        input body      UpdateOrderStatusRequest  true "Status Data"
+// @Success      204
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /orders/{id}/status [post]
+func (h *OrderHandler) UpdateStatus(c *gin.Context) {
+	// Simple Auth
+	secret := os.Getenv("WEBHOOK_SECRET")
+	if secret == "" {
+		slog.Warn("WEBHOOK_SECRET not set, allowing request (DANGEROUS)")
+	} else {
+		token := c.GetHeader("X-Webhook-Secret")
+		if token != secret {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+	}
+
+	orderID := c.Param("id")
+	var req UpdateOrderStatusRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	input := usecase.UpdateOrderStatusInputDTO{
+		OrderID: orderID,
+		Status:  req.Status,
+		Reason:  req.Reason,
+	}
+
+	err := h.updateOrderStatusUseCase.Execute(c.Request.Context(), input)
+	if err != nil {
+		if errors.Is(err, usecase.ErrOrderNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
+			return
+		}
+		slog.Error("Error updating order status", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
 
 // CreateOrder godoc

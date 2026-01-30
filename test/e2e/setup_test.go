@@ -36,6 +36,11 @@ func TestMain(m *testing.M) {
 		testDBURL = "postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable"
 	}
 
+	// Set webhook secret for tests
+	if err := os.Setenv("WEBHOOK_SECRET", "test-webhook-secret"); err != nil {
+		panic(fmt.Sprintf("failed to set webhook secret: %v", err))
+	}
+
 	var err error
 	testDB, err = sqlx.Connect("pgx", testDBURL)
 	if err != nil {
@@ -69,6 +74,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+	updateOrderStatusUseCase := usecase.NewUpdateOrderStatusUseCase(orderRepo)
 	listEventsUseCase := usecase.NewListEventsUseCase(eventRepo)
 	listUserEventsUseCase := usecase.NewListUserEventsUseCase(eventRepo)
 
@@ -76,7 +82,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	userHandler := handler.NewUserHandler(signUpUseCase, usecase.NewGetUserUseCase(userRepo))
 	authHandler := handler.NewAuthHandler(loginUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase, listEventsUseCase, listUserEventsUseCase)
-	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase, updateOrderStatusUseCase)
 
 	// Setup routes
 	api := r.Group("/api/v1")
@@ -85,6 +91,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	api.POST("/signup", userHandler.SignUp)
 	api.POST("/login", authHandler.Login)
 	api.GET("/events", eventHandler.ListEvents)
+	api.POST("/orders/:id/status", orderHandler.UpdateStatus)
 
 	// Protected routes
 	protected := api.Group("/")
@@ -140,6 +147,9 @@ func makeRequest(method, path string, body interface{}, token string) (*httptest
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
+
+	// Always send webhook secret in tests to pass auth
+	req.Header.Set("X-Webhook-Secret", "test-webhook-secret")
 
 	w := httptest.NewRecorder()
 	testServer.ServeHTTP(w, req)
