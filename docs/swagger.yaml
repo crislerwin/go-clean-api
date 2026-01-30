@@ -148,6 +148,8 @@ definitions:
     type: object
   internal_infra_http_handler.UpdateOrderStatusRequest:
     properties:
+      reason:
+        type: string
       status:
         enum:
         - PAID

@@ -754,6 +754,9 @@ const docTemplate = `{
                 "status"
             ],
             "properties": {
+                "reason": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
