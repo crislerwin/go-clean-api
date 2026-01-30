@@ -37,7 +37,9 @@ func TestMain(m *testing.M) {
 	}
 
 	// Set webhook secret for tests
-	os.Setenv("WEBHOOK_SECRET", "test-webhook-secret")
+	if err := os.Setenv("WEBHOOK_SECRET", "test-webhook-secret"); err != nil {
+		panic(fmt.Sprintf("failed to set webhook secret: %v", err))
+	}
 
 	var err error
 	testDB, err = sqlx.Connect("pgx", testDBURL)
