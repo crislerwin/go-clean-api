@@ -146,6 +146,16 @@ definitions:
     - name
     - password
     type: object
+  internal_infra_http_handler.UpdateOrderStatusRequest:
+    properties:
+      status:
+        enum:
+        - PAID
+        - REJECTED
+        type: string
+    required:
+    - status
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -402,6 +412,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Purchase tickets
+      tags:
+      - orders
+  /orders/{id}/status:
+    post:
+      consumes:
+      - application/json
+      description: Update order status (e.g. from payment gateway)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_infra_http_handler.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update order status (Webhook)
       tags:
       - orders
   /signup:
