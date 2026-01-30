@@ -35,6 +35,16 @@ func (m *OrderRepoMock) GetByUserID(ctx context.Context, userID string) ([]*enti
 	return args.Get(0).([]*entity.Order), args.Error(1)
 }
 
+func (m *OrderRepoMock) GetByID(ctx context.Context, id string) (*entity.Order, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*entity.Order), args.Error(1)
+}
+
+func (m *OrderRepoMock) Update(ctx context.Context, order *entity.Order) error {
+	args := m.Called(ctx, order)
+	return args.Error(0)
+}
+
 type EventRepoMock struct {
 	mock.Mock
 }
@@ -101,7 +111,8 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 		userID := uuid.New().String()
 		createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 		listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
-		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+		updateOrderStatusUseCase := usecase.NewUpdateOrderStatusUseCase(orderRepo)
+		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase, updateOrderStatusUseCase)
 
 		r := gin.New()
 		r.Use(func(c *gin.Context) {
@@ -124,7 +135,8 @@ func TestOrderHandler_CreateOrder(t *testing.T) {
 		// Custom setup for unauthenticated case
 		uc := usecase.NewCreateOrderUseCase(nil, nil, nil)
 		listUc := usecase.NewListUserOrdersUseCase(nil, nil)
-		handler := NewOrderHandler(uc, listUc)
+		updateUc := usecase.NewUpdateOrderStatusUseCase(nil)
+		handler := NewOrderHandler(uc, listUc, updateUc)
 		r := gin.New()
 		r.POST("/orders", handler.CreateOrder) // No auth middleware
 
@@ -224,7 +236,8 @@ func TestOrderHandler_ListMyOrders(t *testing.T) {
 		// TxManager not needed for list
 		createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, nil)
 		listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
-		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+		updateOrderStatusUseCase := usecase.NewUpdateOrderStatusUseCase(orderRepo)
+		handler := NewOrderHandler(createOrderUseCase, listUserOrdersUseCase, updateOrderStatusUseCase)
 
 		userID := "user-123"
 

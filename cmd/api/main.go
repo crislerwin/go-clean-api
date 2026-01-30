@@ -82,6 +82,7 @@ func main() {
 	api.POST("/signup", container.UserHandler.SignUp)
 	api.POST("/login", container.AuthHandler.Login)
 	api.GET("/events", container.EventHandler.ListEvents)
+	api.POST("/orders/:id/status", container.OrderHandler.UpdateStatus)
 
 	// Protected routes
 	protected := api.Group("/")

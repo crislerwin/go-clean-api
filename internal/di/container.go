@@ -27,6 +27,7 @@ func NewContainer(db *sqlx.DB) *Container {
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+	updateOrderStatusUseCase := usecase.NewUpdateOrderStatusUseCase(orderRepo)
 	listEventsUseCase := usecase.NewListEventsUseCase(eventRepo)
 	listUserEventsUseCase := usecase.NewListUserEventsUseCase(eventRepo)
 	getUserUseCase := usecase.NewGetUserUseCase(userRepo)
@@ -35,7 +36,7 @@ func NewContainer(db *sqlx.DB) *Container {
 	userHandler := handler.NewUserHandler(signUpUseCase, getUserUseCase)
 	authHandler := handler.NewAuthHandler(loginUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase, listEventsUseCase, listUserEventsUseCase)
-	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase, updateOrderStatusUseCase)
 
 	return &Container{
 		UserHandler:  userHandler,

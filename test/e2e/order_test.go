@@ -18,9 +18,10 @@ func TestOrderFlow(t *testing.T) {
 	adminToken := createAdminUser(t)
 	userToken := createRegularUser(t, "buyer@example.com")
 	eventID := createTestEvent(t, adminToken, 10) // Event with 10 tickets
+	var orderID string
 
 	t.Run("Create Order - Success", func(t *testing.T) {
-		orderPayload := map[string]interface{}{
+		orderPayload := map[string]any{
 			"event_id": eventID,
 			"quantity": 2,
 		}
@@ -29,13 +30,73 @@ func TestOrderFlow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, w.Code)
 
-		var resp map[string]interface{}
+		var resp map[string]any
 		err = parseResponse(w, &resp)
 		require.NoError(t, err)
 		assert.NotEmpty(t, resp["id"])
+		orderID = resp["id"].(string)
 		assert.Equal(t, "PENDING", resp["status"])
 		assert.NotEmpty(t, resp["total_amount"])
 		assert.NotEmpty(t, resp["created_at"])
+	})
+
+	t.Run("Update Order Status - Paid (Webhook)", func(t *testing.T) {
+		payload := map[string]any{
+			"status": "PAID",
+		}
+		w, err := makeRequest("POST", fmt.Sprintf("/api/v1/orders/%s/status", orderID), payload, "")
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNoContent, w.Code)
+
+		// Verify status changed (using list or we might need get by id endpoint if available, but list works)
+		w, err = makeRequest("GET", "/api/v1/orders", nil, userToken)
+		require.NoError(t, err)
+		var orders []map[string]any
+		err = parseResponse(w, &orders)
+		require.NoError(t, err)
+
+		found := false
+		for _, o := range orders {
+			if o["id"] == orderID {
+				assert.Equal(t, "PAID", o["status"])
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "Order should be found in list")
+	})
+
+	t.Run("Update Order Status - Rejected (Webhook)", func(t *testing.T) {
+		// Create another order to reject
+		orderPayload := map[string]any{
+			"event_id": eventID,
+			"quantity": 1,
+		}
+		w, err := makeRequest("POST", "/api/v1/orders", orderPayload, userToken)
+		require.NoError(t, err)
+		var resp map[string]any
+		parseResponse(w, &resp)
+		rejectOrderID := resp["id"].(string)
+
+		payload := map[string]any{
+			"status": "REJECTED",
+		}
+		w, err = makeRequest("POST", fmt.Sprintf("/api/v1/orders/%s/status", rejectOrderID), payload, "")
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNoContent, w.Code)
+
+		// Verify status
+		w, err = makeRequest("GET", "/api/v1/orders", nil, userToken)
+		require.NoError(t, err)
+		var orders []map[string]any
+		parseResponse(w, &orders)
+
+		for _, o := range orders {
+			if o["id"] == rejectOrderID {
+				assert.Equal(t, "REJECTED", o["status"])
+				break
+			}
+		}
 	})
 
 	t.Run("List My Orders", func(t *testing.T) {
@@ -43,14 +104,14 @@ func TestOrderFlow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, w.Code)
 
-		var orders []map[string]interface{}
+		var orders []map[string]any
 		err = parseResponse(w, &orders)
 		require.NoError(t, err)
 		assert.GreaterOrEqual(t, len(orders), 1) // At least the order created above
 	})
 
 	t.Run("Create Order - No Token", func(t *testing.T) {
-		orderPayload := map[string]interface{}{
+		orderPayload := map[string]any{
 			"event_id": eventID,
 			"quantity": 1,
 		}
@@ -61,7 +122,7 @@ func TestOrderFlow(t *testing.T) {
 	})
 
 	t.Run("Create Order - Invalid Event ID", func(t *testing.T) {
-		orderPayload := map[string]interface{}{
+		orderPayload := map[string]any{
 			"event_id": "00000000-0000-0000-0000-000000000000",
 			"quantity": 1,
 		}
@@ -72,7 +133,7 @@ func TestOrderFlow(t *testing.T) {
 	})
 
 	t.Run("Create Order - Zero Quantity", func(t *testing.T) {
-		orderPayload := map[string]interface{}{
+		orderPayload := map[string]any{
 			"event_id": eventID,
 			"quantity": 0,
 		}
@@ -109,7 +170,7 @@ func TestRaceConditions(t *testing.T) {
 			go func(idx int) {
 				defer wg.Done()
 
-				orderPayload := map[string]interface{}{
+				orderPayload := map[string]any{
 					"event_id": eventID,
 					"quantity": 2,
 				}
@@ -157,7 +218,7 @@ func createTestEvent(t *testing.T, adminToken string, capacity int) string {
 
 	futureDate := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
 
-	eventPayload := map[string]interface{}{
+	eventPayload := map[string]any{
 		"name":         fmt.Sprintf("Test Event %d", time.Now().Unix()),
 		"location":     "Test Location",
 		"organization": "Test Org",
@@ -172,7 +233,7 @@ func createTestEvent(t *testing.T, adminToken string, capacity int) string {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, w.Code)
 
-	var resp map[string]interface{}
+	var resp map[string]any
 	err = parseResponse(w, &resp)
 	require.NoError(t, err)
 

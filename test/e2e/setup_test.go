@@ -69,6 +69,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	createEventUseCase := usecase.NewCreateEventUseCase(eventRepo, txManager)
 	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepo, eventRepo, txManager)
 	listUserOrdersUseCase := usecase.NewListUserOrdersUseCase(orderRepo, eventRepo)
+	updateOrderStatusUseCase := usecase.NewUpdateOrderStatusUseCase(orderRepo)
 	listEventsUseCase := usecase.NewListEventsUseCase(eventRepo)
 	listUserEventsUseCase := usecase.NewListUserEventsUseCase(eventRepo)
 
@@ -76,7 +77,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	userHandler := handler.NewUserHandler(signUpUseCase, usecase.NewGetUserUseCase(userRepo))
 	authHandler := handler.NewAuthHandler(loginUseCase)
 	eventHandler := handler.NewEventHandler(createEventUseCase, listEventsUseCase, listUserEventsUseCase)
-	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase)
+	orderHandler := handler.NewOrderHandler(createOrderUseCase, listUserOrdersUseCase, updateOrderStatusUseCase)
 
 	// Setup routes
 	api := r.Group("/api/v1")
@@ -85,6 +86,7 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 	api.POST("/signup", userHandler.SignUp)
 	api.POST("/login", authHandler.Login)
 	api.GET("/events", eventHandler.ListEvents)
+	api.POST("/orders/:id/status", orderHandler.UpdateStatus)
 
 	// Protected routes
 	protected := api.Group("/")

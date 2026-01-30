@@ -29,6 +29,19 @@ func (m *MockOrderRepository) GetByUserID(ctx context.Context, userID string) ([
 	return args.Get(0).([]*entity.Order), args.Error(1)
 }
 
+func (m *MockOrderRepository) GetByID(ctx context.Context, id string) (*entity.Order, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Order), args.Error(1)
+}
+
+func (m *MockOrderRepository) Update(ctx context.Context, order *entity.Order) error {
+	args := m.Called(ctx, order)
+	return args.Error(0)
+}
+
 type MockTransactionManager struct{}
 
 func (m *MockTransactionManager) Do(ctx context.Context, fn func(ctx context.Context) error) error {
