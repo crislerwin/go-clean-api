@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockOrderRepositoryUpdate avoids conflict with other test files
+// MockOrderRepositoryUpdate avoids conflict with other test files.
 type MockOrderRepositoryUpdate struct {
 	mock.Mock
 }

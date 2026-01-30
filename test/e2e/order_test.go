@@ -75,7 +75,8 @@ func TestOrderFlow(t *testing.T) {
 		w, err := makeRequest("POST", "/api/v1/orders", orderPayload, userToken)
 		require.NoError(t, err)
 		var resp map[string]any
-		parseResponse(w, &resp)
+		err = parseResponse(w, &resp)
+		require.NoError(t, err)
 		rejectOrderID := resp["id"].(string)
 
 		payload := map[string]any{
@@ -89,7 +90,8 @@ func TestOrderFlow(t *testing.T) {
 		w, err = makeRequest("GET", "/api/v1/orders", nil, userToken)
 		require.NoError(t, err)
 		var orders []map[string]any
-		parseResponse(w, &orders)
+		err = parseResponse(w, &orders)
+		require.NoError(t, err)
 
 		for _, o := range orders {
 			if o["id"] == rejectOrderID {
