@@ -78,6 +78,7 @@ func TestUpdateOrderStatusUseCase_Execute(t *testing.T) {
 			input: UpdateOrderStatusInputDTO{
 				OrderID: orderID.String(),
 				Status:  "REJECTED",
+				Reason:  "Payment declined",
 			},
 			setupMocks: func(repo *MockOrderRepositoryUpdate) {
 				ticket1, _ := entity.NewTicket(eventID, orderID, 10.0)
@@ -96,6 +97,7 @@ func TestUpdateOrderStatusUseCase_Execute(t *testing.T) {
 				repo.On("Update", mock.Anything, mock.MatchedBy(func(o *entity.Order) bool {
 					return o.ID == orderID &&
 						o.Status == entity.OrderStatusRejected &&
+						o.Reason == "Payment declined" &&
 						o.Tickets[0].Status == entity.TicketStatusCancelled &&
 						o.Tickets[1].Status == entity.TicketStatusCancelled
 				})).Return(nil)

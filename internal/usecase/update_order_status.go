@@ -13,6 +13,7 @@ var ErrOrderNotFound = errors.New("order not found")
 type UpdateOrderStatusInputDTO struct {
 	OrderID string
 	Status  string
+	Reason  string
 }
 
 type UpdateOrderStatusUseCase struct {
@@ -36,6 +37,7 @@ func (uc *UpdateOrderStatusUseCase) Execute(ctx context.Context, input UpdateOrd
 		order.Status = entity.OrderStatusPaid
 	case "REJECTED":
 		order.Status = entity.OrderStatusRejected
+		order.Reason = input.Reason
 		for i := range order.Tickets {
 			if err := order.Tickets[i].Cancel(); err != nil {
 				return err

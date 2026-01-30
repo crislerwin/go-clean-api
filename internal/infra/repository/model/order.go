@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
@@ -8,13 +9,14 @@ import (
 )
 
 type Order struct {
-	ID          uuid.UUID `db:"id"`
-	EventID     uuid.UUID `db:"event_id"`
-	UserID      uuid.UUID `db:"user_id"`
-	TotalAmount float64   `db:"total_amount"`
-	Quantity    int       `db:"quantity"`
-	Status      string    `db:"status"`
-	CreatedAt   time.Time `db:"created_at"`
+	ID          uuid.UUID      `db:"id"`
+	EventID     uuid.UUID      `db:"event_id"`
+	UserID      uuid.UUID      `db:"user_id"`
+	TotalAmount float64        `db:"total_amount"`
+	Quantity    int            `db:"quantity"`
+	Status      string         `db:"status"`
+	Reason      sql.NullString `db:"reason"`
+	CreatedAt   time.Time      `db:"created_at"`
 }
 
 type Ticket struct {
@@ -33,6 +35,7 @@ func NewOrderFromEntity(o *entity.Order) *Order {
 		TotalAmount: o.TotalAmount,
 		Quantity:    o.Quantity,
 		Status:      string(o.Status),
+		Reason:      sql.NullString{String: o.Reason, Valid: o.Reason != ""},
 		CreatedAt:   o.CreatedAt,
 	}
 }
@@ -59,6 +62,7 @@ func (o *Order) ToEntity() *entity.Order {
 		TotalAmount: o.TotalAmount,
 		Quantity:    o.Quantity,
 		Status:      entity.OrderStatus(o.Status),
+		Reason:      o.Reason.String,
 		CreatedAt:   o.CreatedAt,
 		// Note: Tickets are usually loaded separately or joined.
 		// For basic mapping, we might leave Tickets empty here if not loaded.

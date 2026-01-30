@@ -27,6 +27,7 @@ type Order struct {
 	TotalAmount float64
 	Quantity    int
 	Status      OrderStatus
+	Reason      string   // Optional reason for status change (e.g. rejection)
 	Tickets     []Ticket // One-to-many relationship
 	CreatedAt   time.Time
 }

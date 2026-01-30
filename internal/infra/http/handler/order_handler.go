@@ -33,6 +33,7 @@ func NewOrderHandler(create *usecase.CreateOrderUseCase, list *usecase.ListUserO
 
 type UpdateOrderStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=PAID REJECTED"`
+	Reason string `json:"reason"`
 }
 
 // UpdateStatus godoc
@@ -73,6 +74,7 @@ func (h *OrderHandler) UpdateStatus(c *gin.Context) {
 	input := usecase.UpdateOrderStatusInputDTO{
 		OrderID: orderID,
 		Status:  req.Status,
+		Reason:  req.Reason,
 	}
 
 	err := h.updateOrderStatusUseCase.Execute(c.Request.Context(), input)

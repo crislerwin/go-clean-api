@@ -81,6 +81,7 @@ func TestOrderFlow(t *testing.T) {
 
 		payload := map[string]any{
 			"status": "REJECTED",
+			"reason": "Payment failed",
 		}
 		w, err = makeRequest("POST", fmt.Sprintf("/api/v1/orders/%s/status", rejectOrderID), payload, "")
 		require.NoError(t, err)
