@@ -12,10 +12,11 @@ TEST_DATABASE_URL ?= postgres://test_user:test_pass@localhost:5433/ticket_db_tes
 
 .DEFAULT_GOAL := help
 
-.PHONY: help all fmt imports vet lint test test-e2e test-all tidy check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down migration-test-up coverage coverage-html swagger
+.PHONY: help all fmt imports vet lint test test-e2e test-all tidy install check pre-commit-install pre-commit-run ci build run dev migration-new migration-up migration-down migration-test-up coverage coverage-html swagger
 
 help:
 	@echo "Makefile targets:"
+	@echo "  install                 Install project dependencies"
 	@echo "  pre-commit-install      Install pre-commit git hook"
 	@echo "  pre-commit-run          Run pre-commit hooks against all files"
 	@echo "  fmt                     Run gofmt on $(APP_PATH)"
@@ -35,6 +36,14 @@ help:
 	@echo "  migration-test-up       Run migrations on test database"
 	@echo "  swagger                 Generate Swagger documentation"
 	@echo "  ci                      Full pipeline (tidy, fmt, lint, vet, test)"
+
+install:
+	$(GO) mod download
+	$(GO) install github.com/air-verse/air@latest
+	$(GO) install github.com/swaggo/swag/cmd/swag@latest
+	$(GO) install github.com/pressly/goose/v3/cmd/goose@latest
+	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	$(GO) install github.com/pre-commit/pre-commit@latest
 
 pre-commit-install:
 	@command -v $(PRE_COMMIT) >/dev/null 2>&1 || { echo "pre-commit not found"; exit 1; }
