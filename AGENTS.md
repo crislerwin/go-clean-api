@@ -94,12 +94,14 @@ Key design decisions:
 
 ### 2. Dependencies
 
+- **`make install`**: Install all project dependencies (Go modules, Air, Swag, Goose, Golangci-lint, Pre-commit).
 - **`make tidy`**: Updates `go.mod` and `go.sum`.
 
 ### 3. Testing
 
 - **`make test-unit`**: Fast unit tests (excludes e2e).
 - **`make test-e2e`**: Full flow verification (requires DB).
+- **`make test-all`**: Run all tests (unit + e2e).
 - **`make ci`**: Full validation pipeline.
 
 ### 4. Database Migrations
@@ -115,9 +117,11 @@ Key design decisions:
 
 | Command               | Purpose                         |
 | --------------------- | ------------------------------- |
+| `make install`         | Install project dependencies.   |
 | `make dev`            | Start dev server with HMR.      |
 | `make test-unit`      | Run unit tests only.            |
 | `make test-e2e`       | Run e2e tests.                  |
+| `make test-all`       | Run all tests.                  |
 | `make ci`             | Run full pipeline.              |
 | `make lint`           | Run linters.                    |
 | `make migration-new`  | Create new migration (prompts). |

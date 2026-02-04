@@ -49,7 +49,13 @@ This project implements a high-concurrency ticket purchasing system where data c
 
 ### Quick Start
 
-1.  **Start Services**:
+1.  **Install Dependencies**:
+
+    ```bash
+    make install
+    ```
+
+2.  **Start Services**:
 
     ```bash
     make run
@@ -57,15 +63,17 @@ This project implements a high-concurrency ticket purchasing system where data c
     docker-compose up -d
     ```
 
-2.  **Run Migrations**:
+3.  **Run Migrations**:
 
     ```bash
     make migration-up
     ```
 
-3.  **Run Tests**:
+4.  **Run Tests**:
     ```bash
-    make test
+    make test-unit      # Run unit tests only
+    make test-e2e       # Run end-to-end tests (requires test database)
+    make test-all       # Run all tests
     ```
 
 ## 📐 Architecture Diagrams
@@ -84,6 +92,7 @@ classDiagram
 
     class Event {
         +UUID ID
+        +UUID UserID
         +String Name
         +String Location
         +String Organization
@@ -92,6 +101,7 @@ classDiagram
         +String ImageURL
         +Int Capacity
         +Decimal Price
+        +String Description
     }
 
     class Order {
@@ -167,6 +177,10 @@ sequenceDiagram
   - **Response**: `200 OK` with `{"token": "..."}`
 - `GET /api/v1/events`: List all available events.
   - **Response**: `200 OK` with array of events
+- `POST /api/v1/orders/:id/status`: Update order status (Webhook).
+  - **Headers**: `X-Webhook-Secret: <secret>` (if WEBHOOK_SECRET env var is set)
+  - **Body**: `{"status": "PAID|REJECTED", "reason": "optional"}`
+  - **Response**: `204 No Content`
 
 ### Protected Routes (Requires Authentication)
 
@@ -202,15 +216,17 @@ These routes require authentication AND the `admin` role:
       "date": "2025-10-10T00:00:00Z",
       "capacity": 100000,
       "price": 100.0,
-      "image_url": "http://example.com/image.jpg"
-      - **Response**: `201 Created` with event details
+      "image_url": "http://example.com/image.jpg",
+      "description": "The biggest music festival in Latin America"
+    }
     ```
+  - **Response**: `201 Created` with event details
 
 ## TODO
 
 - [ ] Add edit user endpoint
 - [ ] Add edit event endpoint
-- [ ] Add event description field
+- [x] Add event description field
 - [ ] Add soft delete event endpoint
 - [ ] Add event image upload endpoint // using cloud storage
 - [ ] Add event check-in endpoint // using ticket id
