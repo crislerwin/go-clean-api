@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -114,6 +115,25 @@ func TestUpdateOrderStatusUseCase_Execute(t *testing.T) {
 				repo.On("GetByID", mock.Anything, orderID.String()).Return(nil, ErrOrderNotFound)
 			},
 			expectedError: ErrOrderNotFound,
+		},
+		{
+			name: "Invalid Status",
+			input: UpdateOrderStatusInputDTO{
+				OrderID: orderID.String(),
+				Status:  "INVALID_STATUS",
+			},
+			setupMocks: func(repo *MockOrderRepositoryUpdate) {
+				order := &entity.Order{
+					ID:        orderID,
+					EventID:   eventID,
+					UserID:    userID,
+					Status:    entity.OrderStatusPending,
+					Tickets:   []entity.Ticket{},
+					CreatedAt: time.Now(),
+				}
+				repo.On("GetByID", mock.Anything, orderID.String()).Return(order, nil)
+			},
+			expectedError: errors.New("invalid order status: must be PAID or REJECTED"),
 		},
 	}
 

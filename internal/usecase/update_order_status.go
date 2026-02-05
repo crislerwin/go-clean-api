@@ -8,7 +8,10 @@ import (
 	"github.com/crislerwin/go-clean-api/internal/domain/repository"
 )
 
-var ErrOrderNotFound = errors.New("order not found")
+var (
+	ErrOrderNotFound  = errors.New("order not found")
+	ErrorInvalidOrder = errors.New("invalid order status: must be PAID or REJECTED")
+)
 
 type UpdateOrderStatusInputDTO struct {
 	OrderID string
@@ -43,6 +46,8 @@ func (uc *UpdateOrderStatusUseCase) Execute(ctx context.Context, input UpdateOrd
 				return err
 			}
 		}
+	default:
+		return ErrorInvalidOrder
 	}
 
 	return uc.OrderRepo.Update(ctx, order)
