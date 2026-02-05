@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NewUserHandlerFactory creates a new UserHandler with its dependencies
+// NewUserHandlerFactory creates a new UserHandler with its dependencies.
 func NewUserHandlerFactory(db *sqlx.DB) *handler.UserHandler {
 	userRepo := repository.NewUserRepositorySQLx(db)
 	signUpUseCase := usecase.NewSignUpUseCase(userRepo)

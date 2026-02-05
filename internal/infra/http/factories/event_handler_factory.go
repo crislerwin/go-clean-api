@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NewEventHandlerFactory creates a new EventHandler with its dependencies
+// NewEventHandlerFactory creates a new EventHandler with its dependencies.
 func NewEventHandlerFactory(db *sqlx.DB) *handler.EventHandler {
 	txManager := database.NewTransactionManager(db)
 	eventRepo := repository.NewEventRepositorySqlx(db)

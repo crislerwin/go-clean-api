@@ -2,10 +2,11 @@ version: 2
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - ^docs$
+  issues:
+    exclude-dirs:
+      - ^docs$
 
-  # Target Go version for linters (make sure this is <= the golangci-lint binary's supported Go)
+  # Target Go version for linters (make sure this is <= golangci-lint binary's supported Go)
   go: "1.25"
 
 linters:

@@ -42,8 +42,8 @@ install:
 	$(GO) install github.com/air-verse/air@latest
 	$(GO) install github.com/swaggo/swag/cmd/swag@latest
 	$(GO) install github.com/pressly/goose/v3/cmd/goose@latest
-	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	$(GO) install github.com/pre-commit/pre-commit@latest
+	$(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+	pip install pre-commit
 
 pre-commit-install:
 	@command -v $(PRE_COMMIT) >/dev/null 2>&1 || { echo "pre-commit not found"; exit 1; }

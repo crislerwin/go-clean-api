@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NewOrderHandlerFactory creates a new OrderHandler with its dependencies
+// NewOrderHandlerFactory creates a new OrderHandler with its dependencies.
 func NewOrderHandlerFactory(db *sqlx.DB) *handler.OrderHandler {
 	txManager := database.NewTransactionManager(db)
 	orderRepo := repository.NewOrderRepositorySQLx(db)

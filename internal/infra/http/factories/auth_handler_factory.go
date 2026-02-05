@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NewAuthHandlerFactory creates a new AuthHandler with its dependencies
+// NewAuthHandlerFactory creates a new AuthHandler with its dependencies.
 func NewAuthHandlerFactory(db *sqlx.DB) *handler.AuthHandler {
 	userRepo := repository.NewUserRepositorySQLx(db)
 	loginUseCase := usecase.NewLoginUseCase(userRepo)
