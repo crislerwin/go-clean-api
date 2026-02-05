@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	_ "github.com/crislerwin/go-clean-api/docs" // Swagger docs
-	"github.com/crislerwin/go-clean-api/internal/di"
+	httpfactories "github.com/crislerwin/go-clean-api/internal/infra/http/factories"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/middleware"
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib" // Standard library bindings for pgx
@@ -59,7 +59,11 @@ func main() {
 
 	defer db.Close()
 
-	container := di.NewContainer(db)
+	// Handlers
+	userHandler := httpfactories.NewUserHandlerFactory(db)
+	authHandler := httpfactories.NewAuthHandlerFactory(db)
+	eventHandler := httpfactories.NewEventHandlerFactory(db)
+	orderHandler := httpfactories.NewOrderHandlerFactory(db)
 
 	// Router
 	r := gin.Default()
@@ -79,19 +83,19 @@ func main() {
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Public routes
-	api.POST("/signup", container.UserHandler.SignUp)
-	api.POST("/login", container.AuthHandler.Login)
-	api.GET("/events", container.EventHandler.ListEvents)
-	api.POST("/orders/:id/status", container.OrderHandler.UpdateStatus)
+	api.POST("/signup", userHandler.SignUp)
+	api.POST("/login", authHandler.Login)
+	api.GET("/events", eventHandler.ListEvents)
+	api.POST("/orders/:id/status", orderHandler.UpdateStatus)
 
 	// Protected routes
 	protected := api.Group("/")
 	protected.Use(middleware.AuthMiddleware())
-	protected.GET("/me", container.UserHandler.Me)
-	protected.GET("/me/events", container.EventHandler.ListMyEvents)
-	protected.POST("/orders", container.OrderHandler.CreateOrder)
-	protected.GET("/orders", container.OrderHandler.ListMyOrders)
-	protected.POST("/events", middleware.RoleMiddleware("admin"), container.EventHandler.CreateEvent)
+	protected.GET("/me", userHandler.Me)
+	protected.GET("/me/events", eventHandler.ListMyEvents)
+	protected.POST("/orders", orderHandler.CreateOrder)
+	protected.GET("/orders", orderHandler.ListMyOrders)
+	protected.POST("/events", middleware.RoleMiddleware("admin"), eventHandler.CreateEvent)
 
 	slog.Info("Server started on :8080")
 	if err := r.Run(":8080"); err != nil {
