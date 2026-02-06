@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
+	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/handler"
 	"github.com/crislerwin/go-clean-api/internal/infra/http/middleware"
 	"github.com/crislerwin/go-clean-api/internal/infra/repository"
@@ -64,9 +65,10 @@ func setupTestServer(db *sqlx.DB) *gin.Engine {
 
 	// Setup repositories
 	txManager := database.NewTransactionManager(db)
-	eventRepo := repository.NewEventRepositorySqlx(db)
-	userRepo := repository.NewUserRepositorySQLx(db)
-	orderRepo := repository.NewOrderRepositorySQLx(db)
+	client := postgres.NewClient(db)
+	eventRepo := repository.NewEventRepositorySqlx(client)
+	userRepo := repository.NewUserRepositorySQLx(client)
+	orderRepo := repository.NewOrderRepositorySQLx(client)
 
 	// Setup use cases
 	signUpUseCase := usecase.NewSignUpUseCase(userRepo)

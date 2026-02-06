@@ -10,19 +10,17 @@ import (
 	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
 	"github.com/crislerwin/go-clean-api/internal/infra/repository/model"
 	"github.com/crislerwin/go-clean-api/internal/usecase"
-	"github.com/jmoiron/sqlx"
 )
 
 type OrderRepositorySQLx struct {
-	db *sqlx.DB
+	client database.Client
 }
 
-func NewOrderRepositorySQLx(db *sqlx.DB) *OrderRepositorySQLx {
-	return &OrderRepositorySQLx{db: db}
+func NewOrderRepositorySQLx(client database.Client) *OrderRepositorySQLx {
+	return &OrderRepositorySQLx{client: client}
 }
 
 func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) error {
-	executor := database.GetExecutor(ctx, r.db)
 	orderQuery := `
 		INSERT INTO orders (id, event_id, user_id, quantity, total_amount, status, reason, created_at)
 		VALUES (:id, :event_id, :user_id, :quantity, :total_amount, :status, :reason, :created_at)
@@ -33,7 +31,7 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 		`
 
 	orderModel := model.NewOrderFromEntity(order)
-	_, err := sqlx.NamedExecContext(ctx, executor, orderQuery, orderModel)
+	_, err := r.client.NamedExec(ctx, orderQuery, orderModel)
 	if err != nil {
 		return postgres.TranslateError(err)
 	}
@@ -43,7 +41,7 @@ func (r *OrderRepositorySQLx) Save(ctx context.Context, order *entity.Order) err
 	}
 	ticketsModel := model.NewTicketsFromEntity(order.Tickets)
 
-	_, err = sqlx.NamedExecContext(ctx, executor, ticketQuery, ticketsModel)
+	_, err = r.client.NamedExec(ctx, ticketQuery, ticketsModel)
 	if err != nil {
 		return err
 	}
@@ -60,7 +58,7 @@ func (r *OrderRepositorySQLx) GetByUserID(ctx context.Context, userID string) ([
 	`
 
 	var orderModels []*model.Order
-	err := r.db.SelectContext(ctx, &orderModels, query, userID)
+	err := r.client.Select(ctx, &orderModels, query, userID)
 	if err != nil {
 		return nil, postgres.TranslateError(err)
 	}
@@ -85,10 +83,8 @@ func (r *OrderRepositorySQLx) GetByID(ctx context.Context, id string) (*entity.O
 		WHERE order_id = $1
 	`
 
-	executor := database.GetExecutor(ctx, r.db)
-
 	var orderModel model.Order
-	err := sqlx.GetContext(ctx, executor, &orderModel, queryOrder, id)
+	err := r.client.Get(ctx, &orderModel, queryOrder, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, usecase.ErrOrderNotFound
@@ -97,7 +93,7 @@ func (r *OrderRepositorySQLx) GetByID(ctx context.Context, id string) (*entity.O
 	}
 
 	var ticketModels []model.Ticket
-	err = sqlx.SelectContext(ctx, executor, &ticketModels, queryTickets, id)
+	err = r.client.Select(ctx, &ticketModels, queryTickets, id)
 	if err != nil {
 		return nil, postgres.TranslateError(err)
 	}
@@ -119,8 +115,6 @@ func (r *OrderRepositorySQLx) GetByID(ctx context.Context, id string) (*entity.O
 }
 
 func (r *OrderRepositorySQLx) Update(ctx context.Context, order *entity.Order) error {
-	executor := database.GetExecutor(ctx, r.db)
-
 	queryOrder := `
 		UPDATE orders
 		SET status = :status, reason = :reason
@@ -128,7 +122,7 @@ func (r *OrderRepositorySQLx) Update(ctx context.Context, order *entity.Order) e
 	`
 
 	orderModel := model.NewOrderFromEntity(order)
-	_, err := sqlx.NamedExecContext(ctx, executor, queryOrder, orderModel)
+	_, err := r.client.NamedExec(ctx, queryOrder, orderModel)
 	if err != nil {
 		return postgres.TranslateError(err)
 	}
@@ -142,7 +136,7 @@ func (r *OrderRepositorySQLx) Update(ctx context.Context, order *entity.Order) e
 	ticketsModel := model.NewTicketsFromEntity(order.Tickets)
 
 	for _, t := range ticketsModel {
-		_, err = sqlx.NamedExecContext(ctx, executor, queryTickets, t)
+		_, err = r.client.NamedExec(ctx, queryTickets, t)
 		if err != nil {
 			return postgres.TranslateError(err)
 		}

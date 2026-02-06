@@ -6,15 +6,14 @@ import (
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
 	"github.com/crislerwin/go-clean-api/internal/infra/database"
 	"github.com/crislerwin/go-clean-api/internal/infra/repository/model"
-	"github.com/jmoiron/sqlx"
 )
 
 type EventRepositorySQLx struct {
-	db *sqlx.DB
+	client database.Client
 }
 
-func NewEventRepositorySqlx(db *sqlx.DB) *EventRepositorySQLx {
-	return &EventRepositorySQLx{db: db}
+func NewEventRepositorySqlx(client database.Client) *EventRepositorySQLx {
+	return &EventRepositorySQLx{client: client}
 }
 
 func (r *EventRepositorySQLx) GetTotalCapacity(ctx context.Context, eventID string) (int, error) {
@@ -26,11 +25,9 @@ func (r *EventRepositorySQLx) GetTotalCapacity(ctx context.Context, eventID stri
 	FOR UPDATE
 	`
 
-	executor := database.GetExecutor(ctx, r.db)
-
 	var total int
 
-	err := sqlx.GetContext(ctx, executor, &total, query, eventID)
+	err := r.client.Get(ctx, &total, query, eventID)
 
 	if err != nil {
 		return 0, err
@@ -48,11 +45,9 @@ func (r *EventRepositorySQLx) GetSoldTicketsCount(ctx context.Context, eventID s
 	AND o.status IN ('PAID', 'PENDING')
 	`
 
-	executor := database.GetExecutor(ctx, r.db)
-
 	var count int
 
-	err := sqlx.GetContext(ctx, executor, &count, query, eventID)
+	err := r.client.Get(ctx, &count, query, eventID)
 
 	if err != nil {
 		return 0, err
@@ -66,9 +61,8 @@ func (r *EventRepositorySQLx) Create(ctx context.Context, event *entity.Event) e
 	INSERT INTO events (id, user_id, name, location, organization, rating, date, capacity, price, image_url)
 	VALUES (:id, :user_id, :name, :location, :organization, :rating, :date, :capacity, :price, :image_url)
 	`
-	executor := database.GetExecutor(ctx, r.db)
 	eventModel := model.NewEventFromEntity(event)
-	_, err := sqlx.NamedExecContext(ctx, executor, query, eventModel)
+	_, err := r.client.NamedExec(ctx, query, eventModel)
 	return err
 }
 
@@ -82,9 +76,8 @@ func (r *EventRepositorySQLx) GetByID(ctx context.Context, eventID string, forUp
 		query += " FOR UPDATE"
 	}
 
-	executor := database.GetExecutor(ctx, r.db)
 	var eventModel model.Event
-	err := sqlx.GetContext(ctx, executor, &eventModel, query, eventID)
+	err := r.client.Get(ctx, &eventModel, query, eventID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +89,8 @@ func (r *EventRepositorySQLx) ListAll(ctx context.Context) ([]*entity.Event, err
 		SELECT id, user_id, name, location, organization, rating, date, capacity, price, image_url
 		FROM events
 	`
-	executor := database.GetExecutor(ctx, r.db)
 	var eventModels []*model.Event
-	err := sqlx.SelectContext(ctx, executor, &eventModels, query)
+	err := r.client.Select(ctx, &eventModels, query)
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +108,8 @@ func (r *EventRepositorySQLx) ListByUserID(ctx context.Context, userID string) (
 		FROM events
 		WHERE user_id = $1
 	`
-	executor := database.GetExecutor(ctx, r.db)
 	var eventModels []*model.Event
-	err := sqlx.SelectContext(ctx, executor, &eventModels, query, userID)
+	err := r.client.Select(ctx, &eventModels, query, userID)
 	if err != nil {
 		return nil, err
 	}

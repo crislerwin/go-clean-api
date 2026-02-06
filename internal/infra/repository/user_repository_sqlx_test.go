@@ -7,6 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/crislerwin/go-clean-api/internal/domain/entity"
+	"github.com/crislerwin/go-clean-api/internal/infra/database/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +19,8 @@ func TestUserRepositorySQLx_Save(t *testing.T) {
 		defer db.Close()
 
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
-		repo := NewUserRepositorySQLx(sqlxDB)
+		client := postgres.NewClient(sqlxDB)
+		repo := NewUserRepositorySQLx(client)
 
 		user, _ := entity.NewUser("John Doe", "john@example.com", "password123")
 
@@ -38,7 +40,8 @@ func TestUserRepositorySQLx_Save(t *testing.T) {
 		defer db.Close()
 
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
-		repo := NewUserRepositorySQLx(sqlxDB)
+		client := postgres.NewClient(sqlxDB)
+		repo := NewUserRepositorySQLx(client)
 
 		user, _ := entity.NewUser("John Doe", "john@example.com", "password123")
 
@@ -60,7 +63,8 @@ func TestUserRepositorySQLx_GetByEmail(t *testing.T) {
 		defer db.Close()
 
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
-		repo := NewUserRepositorySQLx(sqlxDB)
+		client := postgres.NewClient(sqlxDB)
+		repo := NewUserRepositorySQLx(client)
 
 		rows := sqlmock.NewRows([]string{"id", "name", "email", "password", "role"}).
 			AddRow("userid-123", "John Doe", "john@example.com", "hashedpassword", "user")
@@ -85,7 +89,8 @@ func TestUserRepositorySQLx_GetByEmail(t *testing.T) {
 		defer db.Close()
 
 		sqlxDB := sqlx.NewDb(db, "sqlmock")
-		repo := NewUserRepositorySQLx(sqlxDB)
+		client := postgres.NewClient(sqlxDB)
+		repo := NewUserRepositorySQLx(client)
 
 		mock.ExpectQuery("SELECT id, name, email, password, role FROM users WHERE email = ?").
 			WithArgs("john@example.com").
