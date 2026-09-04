@@ -34,6 +34,7 @@ func TestMain(m *testing.M) {
 	// Matches docker-compose db_test service on port 5433
 	testDBURL := os.Getenv("TEST_DATABASE_URL")
 	if testDBURL == "" {
+		// #nosec G101 -- fallback local test connection string, not a real secret
 		testDBURL = "postgres://test_user:test_pass@localhost:5433/ticket_db_test?sslmode=disable"
 	}
 
