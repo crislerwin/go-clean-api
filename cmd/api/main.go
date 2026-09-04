@@ -47,6 +47,7 @@ func main() {
 
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
+		// #nosec G101 -- fallback local dev connection string, not a real secret
 		connStr = "postgres://ticket_user:ticket_pass@localhost:5432/ticket_db?sslmode=disable"
 	}
 
